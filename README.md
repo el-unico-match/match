@@ -5,7 +5,7 @@
 > \
 > __Funcionalidades actuales:__\
 > \
-> Documentación
+> Documentación\
 > Datos dummy
 
 # Instrucciones

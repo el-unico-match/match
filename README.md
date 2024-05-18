@@ -1,7 +1,7 @@
 # match
 
 > __versión actual:__\
-> 0.0.1
+> 0.0.1\
 > \
 > __Funcionalidades actuales:__\
 > \

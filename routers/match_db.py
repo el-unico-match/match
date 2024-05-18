@@ -21,13 +21,13 @@ async def view_status():
     return {"status":"ok"}
 
 @router.get("/user/{id}/matchs")
-async def view_matchs(userid:str,client_db = Depends(client.get_db)):
+async def view_matchs(id:str,client_db = Depends(client.get_db)):
     print("Implementar lista de matchs")
 	
 @router.get("/user/{id}/matchs/filter")
-async def filter(userid:str,gender:str,age:int,education:str,ethnicity:str,client_db = Depends(client.get_db)):
+async def filter(id:str,gender:str,age:int,education:str,ethnicity:str,client_db = Depends(client.get_db)):
     print("Implementar filtro")
 	
 @router.get("/user/{id}/match/preference")
-async def define_preference(userid:str,gender:str,age:int,education:str,ethnicity:str,client_db = Depends(client.get_db)):
+async def define_preference(id:str,gender:str,age:int,education:str,ethnicity:str,client_db = Depends(client.get_db)):
     print("Implementar funcionalidad de like y dislike")

@@ -1,5 +1,4 @@
 from fastapi import APIRouter,Path,Depends,Response,HTTPException
-#from data.client import client_db
 from typing import List
 from bson import ObjectId
 from settings import Settings

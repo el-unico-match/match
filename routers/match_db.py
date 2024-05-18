@@ -40,7 +40,7 @@ async def view_status():
     logger.info("retornando status")
     return {"status":"ok"}
 
-@router.get("/user/{id}/matchs")
+@router.get("/user/{id}/matchs",response_model=List[Match],summary="Retorna una lista con todos los matchs")
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
 #    print("Implementar lista de matchs")
    matchs=[]
@@ -53,7 +53,7 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
    return matchs
    
 	
-@router.get("/user/{id}/matchs/filter")
+@router.get("/user/{id}/matchs/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro")
 async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
 #    print("Implementar filtro")
     return Profile(userid = "66304a6b2891cdcfebdbdc6f",
@@ -66,6 +66,6 @@ async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = No
    education = "Estudios secundarios",
    ethnicity = "") 	
 	
-@router.get("/user/{id}/match/preference")
-async def define_preference(id:str,candidateid=str,client_db = Depends(client.get_db)):
+@router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
+async def define_preference(id:str,candidateid:str,qualification:str,client_db = Depends(client.get_db)):
     print("Implementar funcionalidad de like y dislike")

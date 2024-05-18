@@ -69,3 +69,11 @@ async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = No
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,candidateid:str,qualification:str,client_db = Depends(client.get_db)):
     print("Implementar funcionalidad de like y dislike")
+	
+@router.post("/user/match/profile",summary="Crea un nuevo perfil", response_class=Response)
+async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))-> None: 
+    print("Implementar funcionalidad de creación de perfil")
+	  
+@router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
+async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario"))-> None:     
+    print("Implementar funcionalidad de actualización de perfil")

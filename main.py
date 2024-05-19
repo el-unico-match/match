@@ -6,7 +6,7 @@ from settings import Settings
 
 summary="Microservicio que se encarga de todo lo relativo a match"
 
-app=FastAPI(title="match",version="0.0.1",summary=summary)
+app=FastAPI(title="match",version="0.0.2",summary=summary)
 
 # Para iniciar el server hacer: uvicorn main:app --reload
 

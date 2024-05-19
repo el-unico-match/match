@@ -1,6 +1,8 @@
 from fastapi import APIRouter,Path,Depends,Response,HTTPException
-from data.profile import Profile
+#from data.schemas.profile import Profile
+#from data.models.profile import profiles as profiles_model
 from data.match import Match
+from data.profile import Profile
 from typing import List,Union
 from bson import ObjectId
 from settings import Settings
@@ -72,8 +74,30 @@ async def define_preference(id:str,candidateid:str,qualification:str,client_db =
 	
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_class=Response)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))-> None: 
-    print("Implementar funcionalidad de creación de perfil")
+    query = client.profiles.insert().values(userid =new_profile.userid,
+	username =new_profile.username,
+	email =new_profile.email,
+	description =new_profile.description,
+	gender =new_profile.gender,
+	looking_for =new_profile.looking_for,
+	age =new_profile.age,
+	education =new_profile.education,
+	ethnicity =new_profile.ethnicity
+	)
+    await client_db.execute(query)
+#    print("Implementar funcionalidad de creación de perfil")
 	  
 @router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
 async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario"))-> None:     
-    print("Implementar funcionalidad de actualización de perfil")
+    query = client.profiles.update().values(userid =updated_profile.userid,
+	username =updated_profile.username,
+	email =updated_profile.email,
+	description =updated_profile.description,
+	gender =updated_profile.gender,
+	looking_for =updated_profile.looking_for,
+	age =updated_profile.age,
+	education =updated_profile.education,
+	ethnicity =updated_profile.ethnicity
+	)
+    await client_db.execute(query)
+#    print("Implementar funcionalidad de actualización de perfil")

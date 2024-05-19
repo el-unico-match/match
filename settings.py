@@ -20,5 +20,6 @@ class Settings(BaseSettings):
     local_db_name:str='local'
     remote_db_name:str='remote'	
     db_name:str=local_db_name
+    db_credentials:str=''
 	
     model_config = SettingsConfigDict(env_file=".env")	

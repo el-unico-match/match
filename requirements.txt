@@ -1,3 +1,4 @@
+bson
 fastapi
 pydantic_settings 
 databases[asyncpg]

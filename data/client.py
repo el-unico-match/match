@@ -1,9 +1,8 @@
 from settings import Settings
-#from pymongo import MongoClient
 from sqlalchemy import create_engine
 #from sqlalchemy.ext.declarative import declarative_base
 #from sqlalchemy.orm import sessionmaker
-from sqlalchemy import MetaData,Table,Column, ForeignKey, Integer, String
+from sqlalchemy import MetaData,Table,Sequence,Column, ForeignKey, Integer, String
 from sqlalchemy import MetaData
 import databases
 
@@ -17,6 +16,8 @@ engine = create_engine(DATABASE_URL)
 
 metadata = MetaData()
 
+#TABLE_ID = Sequence('matchs', start=1000)
+
 profiles = Table(
     "profiles",
     metadata,
@@ -29,6 +30,17 @@ profiles = Table(
     Column("age", Integer),
     Column("education", String),
     Column("ethnicity", String)	
+)
+
+matchs = Table(
+    "matchs",
+    metadata,
+#    Column("id", Integer,TABLE_ID,primary_key=True,server_default=TABLE_ID.next_value() ),#, autoincrement=True),	
+    Column("id", Integer,primary_key=True ),#, autoincrement=True),	
+    Column("userid_1", String),
+    Column("qualification_1", String),
+    Column("userid_2", String),
+    Column("qualification_2", String)
 )
 
 metadata.create_all(engine)

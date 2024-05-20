@@ -1,11 +1,12 @@
 from fastapi import APIRouter,Path,Depends,Response,HTTPException
 #from data.schemas.profile import Profile
 #from data.models.profile import profiles as profiles_model
-from data.match import Match
+from data.match import Match,MatchIn
 from data.profile import Profile
 from typing import List,Union
 from bson import ObjectId
 from settings import Settings
+from sqlalchemy import and_
 #import logging
 import data.client as client
 
@@ -45,15 +46,19 @@ async def view_status():
 @router.get("/user/{id}/matchs",response_model=List[Match],summary="Retorna una lista con todos los matchs")
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
 #    print("Implementar lista de matchs")
-   matchs=[]
-   matchs.append(
-   Match(matchid = "66304a6b2891cdcfebdbdc6f",
-   userid_1 = "1",
-   qualification_1 = "like",
-   userid_2 = "2",
-   qualification_2 = "like"))
-   return matchs
-   
+#   matchs=[]
+#   matchs.append(
+#   Match(matchid = "66304a6b2891cdcfebdbdc6f",
+#   userid_1 = "1",
+#   qualification_1 = "like",
+#   userid_2 = "2",
+#   qualification_2 = "like"))
+#   return matchs
+#    query = client.matchs.filter(matchs.userid_1==id,matchs.qualification_1 == "like",matchs.qualification_2 == "like")
+    matchs=client.matchs
+    query = matchs.select().where(and_(matchs.columns.userid_1==id,matchs.columns.qualification_1 == "like",matchs.columns.qualification_2 == "like") )
+#    query = matchs.select().where(matchs.columns.qualification_2 == "like")
+    return await client_db.fetch_all(query)
 	
 @router.get("/user/{id}/matchs/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro")
 async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
@@ -67,10 +72,24 @@ async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = No
    age = 33,
    education = "Estudios secundarios",
    ethnicity = "") 	
+#    query = client.profiles.filter(profiles.gender == gender, profiles.age==age,profiles.education==education,profiles.ethnicity==ethnicity)
+#	return await client_db.fetch_all(query)
 	
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
-async def define_preference(id:str,candidateid:str,qualification:str,client_db = Depends(client.get_db)):
-    print("Implementar funcionalidad de like y dislike")
+async def define_preference(id:str,
+match:MatchIn,client_db = Depends(client.get_db)):
+#async def define_preference(id:str,candidateid:str,qualification:str,client_db = Depends(client.get_db)):
+#    print("Implementar funcionalidad de like y dislike")
+    query = client.matchs.insert().values(
+#	matchid =match.matchid,
+	userid_1 =match.userid_1,
+    qualification_1 =match.qualification_1,
+    userid_2 =match.userid_2,
+    qualification_2 =match.qualification_2
+    )
+#    print("query:"+str(query))
+    last_record_id = await client_db.execute(query)
+    return {**match.dict(),"matchid": last_record_id}
 	
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_class=Response)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))-> None: 

@@ -17,7 +17,7 @@ jobs:
 
       - name: Create Environment File
         run: |
-          echo "db_host=${{ secrets.DB_HOST }}" > .env    
+          echo "db_domain=${{ vars.DB_DOMAIN }}" > .env    
           echo "db_port=${{ vars.DB_PORT }}" >> .env
           echo "db_name=${{ vars.DB_NAME }}" >> .env
           echo "db_credentials=${{ secrets.DB_CREDENTIALS }}" >> .env

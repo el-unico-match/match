@@ -1,12 +1,14 @@
 # match
 
 > __versión actual:__\
-> 0.0.2
+> 0.0.3
 > \
 > __Funcionalidades actuales:__\
 > \
 > Creación de nuevo perfil\
 > Actualización de perfil solicitado\
+> Incorporación de un nuevo match\
+> Consulta de todos los matchs\
 > Datos dummy
 
 

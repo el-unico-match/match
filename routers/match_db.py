@@ -80,16 +80,68 @@ async def define_preference(id:str,
 match:MatchIn,client_db = Depends(client.get_db)):
 #async def define_preference(id:str,candidateid:str,qualification:str,client_db = Depends(client.get_db)):
 #    print("Implementar funcionalidad de like y dislike")
-    query = client.matchs.insert().values(
-#	matchid =match.matchid,
-	userid_1 =match.userid_1,
-    qualification_1 =match.qualification_1,
-    userid_2 =match.userid_2,
-    qualification_2 =match.qualification_2
-    )
-#    print("query:"+str(query))
-    last_record_id = await client_db.execute(query)
+    matchs=client.matchs
+    query_1=matchs.select().where(and_(matchs.columns.userid_1==match.userid_1,matchs.columns.userid_2==match.userid_2))
+    record_id_1 = await client_db.execute(query_1)
+    print(record_id_1)
+#    return record_id
+    if(record_id_1):
+#        query_2=update_preference(match.userid_1,match.qualification_1,match.userid_2,match.qualification_2)
+        print("actualización 1 de match")  
+        query_2=update_preference_1(match.userid_1,match.userid_2,match.qualification_2)
+    else:
+        query_1=matchs.select().where(and_(matchs.columns.userid_2==match.userid_1,matchs.columns.userid_1==match.userid_2))
+        record_id_2 = await client_db.execute(query_1)
+        print(record_id_2)
+        if(record_id_2):
+#            query_2=update_preference(match.userid_2,match.qualification_2,match.userid_1,match.qualification_1)
+            print("actualización 2 de match") 
+            query_2=update_preference_2(match.userid_1,match.userid_2,match.qualification_2)
+        else:
+#            query_2=insert_preference(match.userid_1,match.qualification_1,match.userid_2,match.qualification_2)
+            print("inserción de nuevo de match") 
+            query_2=insert_preference(match.userid_1,match.userid_2,match.qualification_2)
+
+
+
+#	query_2 = insert.values(
+##	matchid =match.matchid,
+#	userid_1 =match.userid_1,
+#    qualification_1 =match.qualification_1,
+#    userid_2 =match.userid_2,
+#    qualification_2 =match.qualification_2
+#    )
+##    print("query:"+str(query))
+
+    last_record_id = await client_db.execute(query_2)
     return {**match.dict(),"matchid": last_record_id}
+
+def update_preference_1(the_userid_1,the_userid_2,the_qualification_2):
+	return client.matchs.update().values(
+#	matchid =match.matchid,
+	userid_1 =the_userid_1,
+#    qualification_1 =the_qualification_1,
+    userid_2 =the_userid_2,
+    qualification_2 =the_qualification_2
+    )
+
+def update_preference_2(the_userid_1,the_userid_2,the_qualification_2):
+	return client.matchs.update().values(
+#	matchid =match.matchid,
+	userid_1 =the_userid_2,
+    qualification_1 =the_qualification_2,
+    userid_2 =the_userid_1,
+#    qualification_2 =the_qualification_2
+    )	
+
+def insert_preference(the_userid_1,the_userid_2,the_qualification_2):
+	return client.matchs.insert().values(
+#	matchid =match.matchid,
+	userid_1 =the_userid_1,
+#    qualification_1 =the_qualification_1,
+    userid_2 =the_userid_2,
+    qualification_2 =the_qualification_2
+    )
 	
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_class=Response)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))-> None: 

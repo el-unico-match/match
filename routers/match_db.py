@@ -61,8 +61,9 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
     return await client_db.fetch_all(query)
 	
 @router.get("/user/{id}/matchs/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro")
+#@router.get("/user/{id}/matchs/filter",response_model=List[Profile],summary="Retorna un perfil que coincida con el filtro!!")
 async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
-#    print("Implementar filtro")
+##    print("Implementar filtro")
     return Profile(userid = "66304a6b2891cdcfebdbdc6f",
    username = "Margot Robbie",
    email = "mrobbie@hollywood.com",
@@ -72,9 +73,38 @@ async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = No
    age = 33,
    education = "Estudios secundarios",
    ethnicity = "") 	
-#    query = client.profiles.filter(profiles.gender == gender, profiles.age==age,profiles.education==education,profiles.ethnicity==ethnicity)
-#	return await client_db.fetch_all(query)
-	
+##    query = client.profiles.filter(profiles.gender == gender, profiles.age==age,profiles.education==education,profiles.ethnicity==ethnicity)
+##	return await client_db.fetch_all(query)
+
+"""	
+#probar esto
+    arguments = {}
+    query_ = 'SELECT * FROM profiles JOIN matchs ON matchs.userid_2 = profiles.userid WHERE matchs.userid_1 = :id'
+    arguments['id']=id
+    if ( gender != None):
+        print("filtrar por genero") 
+        query_  =query_  + ' AND profiles.gender = :gender'
+        arguments['gender']=gender
+    if ( age != None):
+        print("filtrar por edad") 	
+        query_  =query_  + ' AND profiles.age = :age'
+        arguments['age']=age
+    if ( education != None):
+        print("filtrar por educacion") 	
+        query_  =query_  + ' AND profiles.education = :education'
+        arguments['education']=education
+    if ( ethnicity != None):
+        print("filtrar por etnia") 	
+        query_  =query_  + ' AND profiles.ethnicity = :ethnicity'
+        arguments['ethnicity']=ethnicity
+
+    print(query_)
+    print(arguments)
+    return await client_db.fetch_all(query=query_,values=arguments)	
+#    return await client_db.fetch_all(query = 'SELECT * FROM profiles WHERE true',values={})
+#    return await client_db.fetch_all(query = 'SELECT * FROM profiles')
+"""
+
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,
 match:MatchIn,client_db = Depends(client.get_db)):
@@ -88,7 +118,7 @@ match:MatchIn,client_db = Depends(client.get_db)):
     if(record_id_1):
 #        query_2=update_preference(match.userid_1,match.qualification_1,match.userid_2,match.qualification_2)
         print("actualización 1 de match")  
-        query_2=update_preference_1(match.userid_1,match.userid_2,match.qualification_2)
+        query_2=update_preference_1(record_id_1,match.userid_1,match.userid_2,match.qualification_2)
     else:
         query_1=matchs.select().where(and_(matchs.columns.userid_2==match.userid_1,matchs.columns.userid_1==match.userid_2))
         record_id_2 = await client_db.execute(query_1)
@@ -96,7 +126,7 @@ match:MatchIn,client_db = Depends(client.get_db)):
         if(record_id_2):
 #            query_2=update_preference(match.userid_2,match.qualification_2,match.userid_1,match.qualification_1)
             print("actualización 2 de match") 
-            query_2=update_preference_2(match.userid_1,match.userid_2,match.qualification_2)
+            query_2=update_preference_2(record_id_2,match.userid_1,match.userid_2,match.qualification_2)
         else:
 #            query_2=insert_preference(match.userid_1,match.qualification_1,match.userid_2,match.qualification_2)
             print("inserción de nuevo de match") 
@@ -116,19 +146,21 @@ match:MatchIn,client_db = Depends(client.get_db)):
     last_record_id = await client_db.execute(query_2)
     return {**match.dict(),"matchid": last_record_id}
 
-def update_preference_1(the_userid_1,the_userid_2,the_qualification_2):
-	return client.matchs.update().values(
-#	matchid =match.matchid,
-	userid_1 =the_userid_1,
+def update_preference_1(the_matchid,the_userid_1,the_userid_2,the_qualification_2):
+    matchs=client.matchs
+    return matchs.update().where(matchs.columns.id == the_matchid).values(
+#    id =the_matchid,
+    userid_1 =the_userid_1,
 #    qualification_1 =the_qualification_1,
     userid_2 =the_userid_2,
     qualification_2 =the_qualification_2
     )
 
-def update_preference_2(the_userid_1,the_userid_2,the_qualification_2):
-	return client.matchs.update().values(
-#	matchid =match.matchid,
-	userid_1 =the_userid_2,
+def update_preference_2(the_matchid,the_userid_1,the_userid_2,the_qualification_2):
+    matchs=client.matchs
+    return matchs.update().where(matchs.columns.id == the_matchid).values(
+#    id =the_matchid,
+    userid_1 =the_userid_2,
     qualification_1 =the_qualification_2,
     userid_2 =the_userid_1,
 #    qualification_2 =the_qualification_2

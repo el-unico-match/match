@@ -16,16 +16,23 @@ settings=Settings()
 #logger=logging.getLogger(__name__)  
 			
 def profile_schema(profile)-> dict:
-    return {"userid":profile["userid"],
+#    print(profile)
+#    print(profile["userid"])
+#    print(profile["username"])
+    schema= {"userid":profile["userid"],
          	"username":profile["username"],
 	        "email":profile["email"],
 			"description":profile["description"],
 			"gender":profile["gender"],
 			"looking_for":profile["looking_for"],
-			"age":profile["age"],
+			"age":int(profile["age"]),
 			"education":profile["education"],
 	        "ethnicity":profile["ethnicity"]
 			}
+#    print("schema:")
+#    print(schema)
+#    print(type(schema))
+    return schema			
 
 def profiles_schema(profiles)-> list:
    list=[]
@@ -62,8 +69,11 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
 	
 #@router.get("/user/{id}/matchs/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro")
 #@router.get("/user/{id}/matchs/filter",response_model=List[Profile],summary="Retorna un perfil que coincida con el filtro!!")
-@router.get("/user/{id}/matchs/filter",summary="Retorna un perfil que coincida con el filtro!")
+@router.get("/user/{id}/matchs/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
 async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
+    return await filter_version_2(id,gender,age,education,ethnicity,client_db)
+
+async def filter_version_1(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
 ##    print("Implementar filtro")
 #    return Profile(userid = "66304a6b2891cdcfebdbdc6f",
 #   username = "Margot Robbie",
@@ -80,10 +90,10 @@ async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = No
 
 #probar esto
     arguments = {}
-    select_clause='SELECT profiles.userid,profiles.username ,profiles.email ,profiles.description,profiles.gender,profiles.looking_for,profiles.age,profiles.education,profiles.ethnicity'
+    select_clause='SELECT *'# profiles.userid,profiles.username ,profiles.email ,profiles.description,profiles.gender,profiles.looking_for,profiles.age,profiles.education,profiles.ethnicity'
     from_clause=' FROM profiles'
-    join_clause=' FULL OUTER JOIN matchs ON profiles.userid = matchs.userid_2 AND profiles.userid = matchs.userid_1'
-    where_clause=' WHERE matchs.id IS NULL'	
+    join_clause=' FULL OUTER JOIN matchs ON profiles.userid = matchs.userid_2'# AND profiles.userid = matchs.userid_1'
+    where_clause=''# WHERE matchs.userid_1=:id'# AND matchs.id IS NULL'	
     query_ = select_clause+from_clause+join_clause+where_clause
 #    query_ = 'SELECT * FROM profiles JOIN matchs ON matchs.userid_2 = profiles.userid WHERE matchs.userid_1 = :id'
 #    arguments['id']=id
@@ -119,6 +129,62 @@ async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = No
 	    print(tuple(result.values()))
     return ""
 
+async def filter_version_2(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
+
+    arguments = {}
+	#obtengo todos los perfiles que no son los de userid_1
+    all_profiles='SELECT * FROM profiles WHERE profiles.userid <> :id'
+	
+	#obtengo los perfiles a los que el userid_1 le dio like o dislike (es decir cuya qualification_2 no es nula)
+    select_clause=' SELECT profiles.userid,profiles.username ,profiles.email ,profiles.description,profiles.gender,profiles.looking_for,profiles.age,profiles.education,profiles.ethnicity'
+    from_clause=' FROM profiles'
+    join_clause=' FULL OUTER JOIN matchs ON matchs.userid_2 = profiles.userid'
+    where_clause=' WHERE matchs.userid_1=:id AND matchs.qualification_2 IS NOT NULL'
+    viewed_profiles = select_clause+from_clause+join_clause+where_clause
+
+    arguments['id']=id
+	
+	#agrego los filtros que corresponda
+    if ( gender != None):
+        print("filtrar por genero") 
+        all_profiles  =all_profiles  + ' AND profiles.gender = :gender'
+        viewed_profiles  =viewed_profiles  + ' AND profiles.gender = :gender'
+        arguments['gender']=gender
+    if ( age != None):
+        print("filtrar por edad") 	
+        all_profiles  =all_profiles  + ' AND profiles.age = :age'
+        viewed_profiles  =viewed_profiles  + ' AND profiles.age = :age'
+        arguments['age']=age
+    if ( education != None):
+        print("filtrar por educacion") 	
+        all_profiles  =all_profiles  + ' AND profiles.education = :education'
+        viewed_profiles  =viewed_profiles  + ' AND profiles.education = :education'
+        arguments['education']=education
+    if ( ethnicity != None):
+        print("filtrar por etnia") 	
+        all_profiles  =all_profiles  + ' AND profiles.education = :education'
+        viewed_profiles  =viewed_profiles  + ' AND profiles.education = :education'
+        arguments['ethnicity']=ethnicity
+
+    #me quedo solo con los perfiles que no ha visto todavía el usuario		
+    query_=all_profiles+' EXCEPT'+viewed_profiles
+		
+    print(query_)
+    print(arguments)
+
+#    results= await client_db.fetch_all(query=query_,values=arguments)
+#    for result in results:
+#	    print(tuple(result.values()))
+#    return ""	
+    results = await client_db.fetch_one(query=query_,values=arguments) 
+#    print({**results})
+#    print(type({**results}))
+#    print({results["userid"],results["username"]})
+#    return Profile(**profile_schema(results))
+    #TODO: revisar porque falla el return de los datos obtenidos por la query
+    if(not results):
+       raise HTTPException(status_code=404,detail="No se han encontrado personas para esta consulta")	    
+    return profile_schema(results)  
 
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):

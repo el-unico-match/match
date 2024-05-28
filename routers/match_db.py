@@ -101,7 +101,7 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
 	
 #@router.get("/user/{id}/matchs/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro")
 #@router.get("/user/{id}/matchs/filter",response_model=List[Profile],summary="Retorna un perfil que coincida con el filtro!!")
-@router.get("/user/{id}/matchs/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
+@router.get("/user/{id}/profiles/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
 async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
     return await filter_version_2(id,gender,age,education,ethnicity,client_db)
 

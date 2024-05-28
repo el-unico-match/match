@@ -1,7 +1,7 @@
 from fastapi import APIRouter,Path,Depends,Response,HTTPException
 #from data.schemas.profile import Profile
 #from data.models.profile import profiles as profiles_model
-from data.match import Match,MatchIn
+from data.match import Match,MatchIn,MatchOut
 from data.profile import Profile
 from typing import List,Union
 from bson import ObjectId
@@ -39,7 +39,29 @@ def profiles_schema(profiles)-> list:
    for profile in profiles:
        list.append(Profile(**profile_schema(profile)))
    return list			
-			
+
+def match_schema(match)-> dict:
+#    print(profile)
+#    print(profile["userid"])
+#    print(profile["username"])
+    schema= {"id":match["id"],
+         	"userid_1":match["userid_1"],
+	        "qualification_1":match["qualification_1"],
+			"userid_2":match["userid_2"],
+			"username_2":match["username_2"],
+			"qualification_2":match["qualification_2"]
+			}
+#    print("schema:")
+#    print(schema)
+#    print(type(schema))
+    return schema
+
+def matchs_schema(matchs)-> list:
+   list=[]
+   for match in matchs:
+       list.append(MatchOut(**match_schema(match)))
+   return list	
+	
 router=APIRouter(tags=["match"])
 
 
@@ -50,7 +72,8 @@ async def view_status():
     logger.info("retornando status")
     return {"status":"ok"}
 
-@router.get("/user/{id}/matchs",response_model=List[Match],summary="Retorna una lista con todos los matchs")
+@router.get("/user/{id}/matchs",response_model=List[MatchOut]
+,summary="Retorna una lista con todos los matchs")
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
 #    print("Implementar lista de matchs")
 #   matchs=[]
@@ -62,10 +85,19 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
 #   qualification_2 = "like"))
 #   return matchs
 #    query = client.matchs.filter(matchs.userid_1==id,matchs.qualification_1 == "like",matchs.qualification_2 == "like")
-    matchs=client.matchs
-    query = matchs.select().where(and_(matchs.columns.userid_1==id,matchs.columns.qualification_1 == "like",matchs.columns.qualification_2 == "like") )
+##    matchs=client.matchs
+##    query = matchs.select().where(and_(matchs.columns.userid_1==id,matchs.columns.qualification_1 == "like",matchs.columns.qualification_2 == "like") )
 #    query = matchs.select().where(matchs.columns.qualification_2 == "like")
-    return await client_db.fetch_all(query)
+    select_clause=' SELECT matchs.id,matchs.userid_1,matchs.qualification_1,matchs.userid_2,profiles.username as username_2,matchs.qualification_2'
+    from_clause=' FROM profiles'
+    join_clause=' FULL OUTER JOIN matchs ON matchs.userid_2 = profiles.userid'
+    where_clause=' WHERE matchs.userid_1=:id AND matchs.qualification_1 = :qualification AND matchs.qualification_2 = :qualification'
+    matchs_results = select_clause+from_clause+join_clause+where_clause
+#    return await client_db.fetch_all(query)
+    results=await client_db.fetch_all(query=matchs_results,values={"id":id,"qualification":"like"})
+    for result in results:
+	    print(tuple(result.values()))
+    return matchs_schema(results)    
 	
 #@router.get("/user/{id}/matchs/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro")
 #@router.get("/user/{id}/matchs/filter",response_model=List[Profile],summary="Retorna un perfil que coincida con el filtro!!")

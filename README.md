@@ -1,7 +1,7 @@
 # match
 
 > __versión actual:__\
-> 0.0.5
+> 0.0.6
 > \
 > __Funcionalidades actuales:__\
 > \
@@ -9,7 +9,7 @@
 > Actualización de perfil solicitado\
 > Incorporación de un nuevo match (con mejoras)\
 > Consulta de todos los matchs\
-> Consulta de perfil que coincida con el filtro
+> Consulta de perfil que coincida con el filtro (cambio de endpoint)
 
 
 # Instrucciones

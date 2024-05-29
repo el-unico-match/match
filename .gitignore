@@ -1,5 +1,6 @@
 .env
 .venv
+dev.env
 *.pyc
 *.log
 

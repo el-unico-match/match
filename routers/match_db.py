@@ -103,6 +103,11 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
 #@router.get("/user/{id}/matchs/filter",response_model=List[Profile],summary="Retorna un perfil que coincida con el filtro!!")
 @router.get("/user/{id}/profiles/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
 async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
+    query = "SELECT * FROM profiles WHERE profiles.userid = :id"
+    result = await client_db.fetch_one(query=query, values={"id": id})
+    print(result)
+    if not result:
+        raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
     return await filter_version_2(id,gender,age,education,ethnicity,client_db)
 
 async def filter_version_1(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
@@ -215,7 +220,7 @@ async def filter_version_2(id:str,gender:Union[str, None] = None,age:Union[int, 
 #    return Profile(**profile_schema(results))
     #TODO: revisar porque falla el return de los datos obtenidos por la query
     if(not results):
-       raise HTTPException(status_code=404,detail="No se han encontrado personas para esta consulta")	    
+       raise HTTPException(status_code=404,detail="No se han encontrado perfiles para esta consulta")	    
     return profile_schema(results)  
 
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
@@ -369,7 +374,12 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
 	education =new_profile.education,
 	ethnicity =new_profile.ethnicity
 	)
-    await client_db.execute(query)
+    try:
+        await client_db.execute(query)
+    except Exception as e:
+#      logger.error(str(e))
+        print(e)
+        raise HTTPException(status_code=400,detail="El perfil ya existe")  		
 #    print("Implementar funcionalidad de creación de perfil")
 	  
 @router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
@@ -384,5 +394,10 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
 	education =updated_profile.education,
 	ethnicity =updated_profile.ethnicity
 	)
-    await client_db.execute(query)
+    try: 	
+        await client_db.execute(query)
+    except Exception as e:
+#      logger.error(str(e))
+        print(e)
+        raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
 #    print("Implementar funcionalidad de actualización de perfil")

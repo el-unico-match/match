@@ -384,7 +384,8 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
 	  
 @router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
 async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario"))-> None:     
-    query = client.profiles.update().values(userid =updated_profile.userid,
+    profiles=client.profiles
+    query = profiles.update().where(profiles.columns.userid ==updated_profile.userid).values(
 	username =updated_profile.username,
 	email =updated_profile.email,
 	description =updated_profile.description,
@@ -396,8 +397,14 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
 	)
     try: 	
         await client_db.execute(query)
+        ##query_result = "SELECT * FROM profiles WHERE userid = :id"		
+        #query_result=profiles.select().where(profiles.columns.userid ==updated_profile.userid)
+        #result=await client_db.fetch_one(query=query_result)
+        #print (result)
+        #return profile_schema(result)  		
     except Exception as e:
 #      logger.error(str(e))
         print(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
 #    print("Implementar funcionalidad de actualización de perfil")
+    

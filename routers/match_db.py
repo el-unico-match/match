@@ -111,11 +111,15 @@ async def filter(
     if not myprofile:
         raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
     
-    arguments = { 'id': id }
+    arguments = { 'id': id, "superlike":"superlike" }
     sql_query = \
         'Select pf.* '\
         'from profiles pf '\
         '   left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated '\
+        '   left join matchs m2 on '\
+        '                    m2.userid_qualificated = :id '\
+        '                    and pf.userid = m2.userid_qualificator '\
+        '                    and m2.qualification = :superlike '\
         'where pf.userid <> :id and m.id is null '
         
     if (gender != None):
@@ -138,30 +142,40 @@ async def filter(
         sql_query += ' and pf.ethnicity = :ethnicity'
         arguments["ethnicity"] = ethnicity
 
-    sql_query += ' order by pf.is_match_plus desc , pf.userid '
+    sql_query += ' order by m2., pf.is_match_plus desc, pf.userid '
 	
     results = await client_db.fetch_all(query = sql_query, values = arguments)
 
     if (distance != None):
         for row in results:
             # Para mejorar presicion usar cuentas correctas
-            earth_rad = 6371000.0 # valor en metros
-            #earth_rad = 63710.0   # valor en cuadras
-            #earth_rad = 6371.0    # valor en kilometros
+            rad = 6371000.0 # valor en metros
+            #rad = 63710.0   # valor en cuadras
+            #rad = 6371.0    # valor en kilometros
 
             lat1 = math.radians(row["latitud"])
             lon1 = math.radians(row["longitud"])
             lat2 = math.radians(myprofile["latitud"])
             lon2 = math.radians(myprofile["longitud"])
-            
-            # Differences in coordinates
-            dlat = lat2 - lat1
-            dlon = lon2 - lon1
-            aux1 = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-            aux2 = 2 * math.atan2(math.sqrt(aux1), math.sqrt(1 - aux1))
 
-            dist = earth_rad * aux2
-            if (dist < distance):
+            pos_row = [
+                math.sin(lat1)*math.cos(lon1),
+                math.sin(lat1)*math.sin(lon1),
+                math.cos(lat1)
+            ]
+            pos_prof = [
+                math.sin(lat2)*math.cos(lon2),
+                math.sin(lat2)*math.sin(lon2),
+                math.cos(lat2)
+            ]
+
+            xdist = pos_row[0]-pos_prof[0]
+            ydist = pos_row[1]-pos_prof[1]
+            zdist = pos_row[2]-pos_prof[2]
+
+            # Distance squared
+            dist = rad*rad*(xdist*xdist + ydist*ydist + zdist*zdist)
+            if (dist < distance * distance):
                 return profile_schema(row)
     
     #TODO: revisar porque falla el return de los datos obtenidos por la query

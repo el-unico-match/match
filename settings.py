@@ -22,4 +22,7 @@ class Settings(BaseSettings):
     db_name:str=local_db_name
     db_credentials:str=''
 	
+    LIKE_LIMITS:int=2
+    SUPERLIKE_LIMITS:int=4
+
     model_config = SettingsConfigDict(env_file=("dev.env",".env"))	

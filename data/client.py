@@ -1,9 +1,7 @@
 from settings import Settings
 from sqlalchemy import create_engine
-#from sqlalchemy.ext.declarative import declarative_base
-#from sqlalchemy.orm import sessionmaker
-from sqlalchemy import MetaData,Table,Sequence,Column, ForeignKey, Integer, String, Boolean
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, Table, Column
+from sqlalchemy import Integer, String, Boolean, Float, DateTime
 import databases
 
 settings=Settings()	
@@ -28,7 +26,13 @@ profiles = Table(
     Column("age", Integer),
     Column("education", String),
     Column("ethnicity", String),
-    Column("is_match_plus",Boolean)
+    Column("is_match_plus",Boolean),
+    Column("latitud",Float),
+    Column("longitud",Float),
+
+    Column("last_like_date", DateTime),
+    Column("like_counter", Integer),
+    Column("superlike_counter", Integer)
 )
 
 
@@ -40,7 +44,9 @@ profiles = Table(
 #     Column("age_from", Integer),
 #     Column("age_to", Integer),
 #     Column("education", String),
-#     Column("ethnicity", String)
+#     Column("ethnicity", String),
+#     Column("latitud",Integer),
+#     Column("longitud",Integer)
 # )
 
 matchs = Table(
@@ -49,7 +55,9 @@ matchs = Table(
     Column("id", Integer, primary_key=True),#, autoincrement=True),	
     Column("userid_qualificator", String),
     Column("userid_qualificated", String),
-    Column("qualification", String)
+    Column("qualification", String),
+    Column("last_message_date", DateTime),
+    Column("blocked", Boolean)
 )
 
 metadata.create_all(engine)

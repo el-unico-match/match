@@ -1,12 +1,9 @@
 from fastapi import APIRouter,Path,Depends,Response,HTTPException
-#from data.schemas.profile import Profile
-#from data.models.profile import profiles as profiles_model
 from data.match import Match,MatchIn,MatchOut
 from data.profile import Profile
 from typing import List,Union
-from bson import ObjectId
 from settings import Settings
-from sqlalchemy import and_
+from datetime import datetime
 import logging
 import data.client as client
 
@@ -16,15 +13,21 @@ logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)  
 			
 def profile_schema(profile)-> dict:
-    schema= {"userid":profile["userid"],
-         	"username":profile["username"],
-			"gender":profile["gender"],
-			"looking_for":profile["looking_for"],
-			"age":int(profile["age"]),
-			"education":profile["education"],
-	        "ethnicity":profile["ethnicity"],
-            "is_match_plus":profile["is_match_plus"]
-			}
+    schema= {
+        "userid":profile["userid"],
+        "username":profile["username"],
+        "gender":profile["gender"],
+        "looking_for":profile["looking_for"],
+        "age":int(profile["age"]),
+        "education":profile["education"],
+        "ethnicity":profile["ethnicity"],
+        "is_match_plus":profile["is_match_plus"],
+        "latitud":profile["latitud"],
+        "longitud":profile["longitud"],
+        "last_like_date":profile["last_like_date"],
+        "like_counter":profile["like_counter"],
+        "superlike_counter":profile["superlike_counter"],
+    }
     return schema			
 
 def profiles_schema(profiles)-> list:
@@ -77,7 +80,9 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
         '    inner join profiles pf2 on orig.userid_qualificated = pf2.userid'\
         ' where orig.qualification = :like'\
         '   and dest.qualification = :like'\
-        '   and orig.userid_qualificator = :id'
+        '   and orig.userid_qualificator = :id'\
+        '   and not orig.bloqued and not dest.blocked'\
+        ' order by orig.last_message_date desc'
     
     results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
     for result in results:
@@ -95,13 +100,14 @@ async def filter(
     age_to:Union[int, None] = None,
     education:Union[str, None] = None,
     ethnicity:Union[str, None] = None,
+    distance:Union[float, None] = None,
     client_db = Depends(client.get_db)
 ):
     logger.error("retornando perfil que coincida con el filtro")
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
-    result = await client_db.fetch_one(query = query, values={"id": id})
-    print(result)
-    if not result:
+    myprofile = await client_db.fetch_one(query = query, values={"id": id})
+    print(myprofile)
+    if not myprofile:
         raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
     
     arguments = { 'id': id }
@@ -130,26 +136,66 @@ async def filter(
     if (ethnicity != None):
         sql_query += ' and pf.ethnicity = :ethnicity'
         arguments["ethnicity"] = ethnicity
-    
+
     sql_query += ' order by pf.is_match_plus desc , pf.userid '
 	
-    results = await client_db.fetch_one(query = sql_query, values = arguments) 
+    results = await client_db.fetch_all(query = sql_query, values = arguments)
+
+    if (distance != None):
+        for row in results:
+            # Para mejorar presicion usar cuentas correctas
+
+            # A cortas distancias lo aproximamos como si fuesen un plano
+            xdist = row["latitud"] - myprofile["latitud"]
+            ydist = row["longitud"] - myprofile["longitud"]
+            
+            # Distancia al cuadrado
+            dist = xdist*xdist + ydist*ydist
+            if (dist < (distance*distance)):
+                return profile_schema(row)
+    
     #TODO: revisar porque falla el return de los datos obtenidos por la query
-    if(not results):
-       raise HTTPException(status_code=404,detail="No se han encontrado perfiles para esta consulta")	    
-    return profile_schema(results)  
+    raise HTTPException(status_code=200,detail="No se han encontrado perfiles para esta consulta")	    
 
 #match/swipe
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):
     logger.error("agregando un nuevo match")
-    matchs = client.matchs
+    
+    query = "SELECT * FROM profiles WHERE profiles.userid = :id"
+    myprofile = await client_db.fetch_one(query = query, values={"id": id})
+    
+    if (not myprofile.is_match_plus):
+        if (myprofile.last_like_date.date() < datetime.now().date()):
+            myprofile.like_counter = 0
 
+        if (myprofile.like_counter > settings.LIKE_LIMITS):
+            raise HTTPException(status_code=400,detail="Se alcanzo el limite de likes")
+        
+        if (match.qualification == 'like'):
+            myprofile.last_like_date = datetime.now()
+            myprofile.like_counter += 1
+    else:
+        if (myprofile.last_like_date.date() < datetime.now().date()):
+            myprofile.superlike_counter = 0
+        
+        if (myprofile.superlike_counter > settings.SUPERLIKE_LIMITS):
+            raise HTTPException(status_code=400,detail="Se alcanzo el limite de superlikes")
+        
+        if (match.qualification == 'superlike'):
+            myprofile.last_like_date = datetime.now()
+            myprofile.superlike_counter += 1
+
+    profiles = client.profiles
+    query = profiles.update().where(profiles.columns.userid == id).values(myprofile)
+    await client_db.execute(query)
+
+    matchs = client.matchs
     # Por las dudas pero no deberia pasar
     # porque solo se muestran par hacer match los que no fueron calificados
     old_del = matchs.delete().where(
-        matchs.c.userid_qualificator == match.userid_qualificator,
-        matchs.c.userid_qualificated == match.userid_qualificated
+        matchs.columns.userid_qualificator == match.userid_qualificator,
+        matchs.columns.userid_qualificated == match.userid_qualificated
     )
     await client_db.execute(old_del)
 
@@ -161,91 +207,77 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
 
     await client_db.execute(new_match)
 
-#FALTA
-
-def find_match(client_db,the_user_1,the_user_2):
-    matchs=client.matchs
-    query=matchs.select().where(and_(matchs.columns.userid_1==the_user_1,matchs.columns.userid_2==the_user_2))
-    return client_db.execute(query)
-	
-def update_preference_1(the_matchid,the_userid_1,the_userid_2,the_qualification_2):
-    matchs=client.matchs
-
-
-
-    return matchs.update().where(matchs.columns.id == the_matchid).values(
-#    id =the_matchid,
-    userid_1 =the_userid_1,
-#    qualification_1 =the_qualification_1,
-    userid_2 =the_userid_2,
-    qualification_2 =the_qualification_2
-    )
-
-def update_preference_2(the_matchid,the_userid_1,the_userid_2,the_qualification_2):
-    matchs=client.matchs
-    return matchs.update().where(matchs.columns.id == the_matchid).values(
-#    id =the_matchid,
-    userid_1 =the_userid_2,
-    qualification_1 =the_qualification_2,
-    userid_2 =the_userid_1,
-#    qualification_2 =the_qualification_2
-    )	
-
-def insert_preference(the_userid_1,the_userid_2,the_qualification_2):
-	return client.matchs.insert().values(
-#	matchid =match.matchid,
-	userid_1 =the_userid_1,
-#    qualification_1 =the_qualification_1,
-    userid_2 =the_userid_2,
-    qualification_2 =the_qualification_2
-    )
-	
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_class=Response)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))-> None: 
     query = client.profiles.insert().values(userid =new_profile.userid,
-        username =new_profile.username,
-        gender =new_profile.gender,
-        looking_for =new_profile.looking_for,
-        age =new_profile.age,
-        education =new_profile.education,
-        ethnicity =new_profile.ethnicity,
-        is_match_plus=False
+        username          = new_profile.username,
+        gender            = new_profile.gender,
+        looking_for       = new_profile.looking_for,
+        age               = new_profile.age,
+        education         = new_profile.education,
+        ethnicity         = new_profile.ethnicity,
+        is_match_plus     = False,
+        latitud           = new_profile.latitud,
+        longitud          = new_profile.longitud,
+        last_like_date    = new_profile.last_like_date,
+        like_counter      = new_profile.like_counter,
+        superlike_counter = new_profile.superlike_counter
 	)
     logger.info("creando el perfil en base de datos")	
     try:
         await client_db.execute(query)
     except Exception as e:
-#      logger.error(str(e))
         print(e)
-        logger.error("el perfil ya existe")      				
-        raise HTTPException(status_code=400,detail="El perfil ya existe")  		
-#    print("Implementar funcionalidad de creación de perfil")
+        logger.error(e)
+        raise HTTPException(status_code=400,detail="El perfil ya existe")
 	  
 @router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
 async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario"))-> None:     
     profiles = client.profiles
     query = profiles.update().where(profiles.columns.userid ==updated_profile.userid).values(
-        username = updated_profile.username,
-        gender = updated_profile.gender,
-        looking_for = updated_profile.looking_for,
-        age = updated_profile.age,
-        education = updated_profile.education,
-        ethnicity = updated_profile.ethnicity,
-        is_match_plus = updated_profile.is_match_plus
+        username          = updated_profile.username,
+        gender            = updated_profile.gender,
+        looking_for       = updated_profile.looking_for,
+        age               = updated_profile.age,
+        education         = updated_profile.education,
+        ethnicity         = updated_profile.ethnicity,
+        is_match_plus     = updated_profile.is_match_plus,
+        latitud           = updated_profile.latitud,
+        longitud          = updated_profile.longitud,
+        last_like_date    = updated_profile.last_like_date,
+        like_counter      = updated_profile.like_counter,
+        superlike_counter = updated_profile.superlike_counter
     )
 
     logger.info("actualizando el perfil en base de datos")
     try: 	
-        await client_db.execute(query)
-        ##query_result = "SELECT * FROM profiles WHERE userid = :id"		
-        #query_result=profiles.select().where(profiles.columns.userid ==updated_profile.userid)
-        #result=await client_db.fetch_one(query=query_result)
-        #print (result)
-        #return profile_schema(result)  		
+        await client_db.execute(query)		
     except Exception as e:
-#      logger.error(str(e))
         print(e)
-        logger.error("no se ha encontrado el perfil")      		
+        logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
-#    print("Implementar funcionalidad de actualización de perfil")
     
+@router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
+async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
+    sql_query = \
+        ' update matchs '\
+        ' set last_message_date = NOW() '\
+        ' where m.userid_qualificator = :sender and m.userid_qualificated = :reciever or '\
+        '       m.userid_qualificator = :reciever and m.userid_qualificated = :sender '
+
+    await client_db.execute(query = sql_query, values = { 
+        "sender": userid_sender,
+        "reciever": userid_reciever
+    })
+
+@router.post("/user/match/block",summary="Bloquear un usuario", response_class=Response)
+async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(client.get_db))-> None:
+    sql_query = \
+        ' update matchs '\
+        ' set blocked = TRUE '\
+        ' where m.userid_qualificator = :blocker and m.userid_qualificated = :blocked '
+
+    await client_db.execute(query = sql_query, values = { 
+        "blocker": userid_bloquer,
+        "blocked": userid_blocked
+    })

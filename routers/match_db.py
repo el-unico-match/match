@@ -68,16 +68,16 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
     logger.error("retornando lista de matchs")
 
     sql_query = \
-        'Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,'\
-        '       orig.qualification qualification_1, dest.qualification qualification_2,'\
-        '       pf1.name username_1, pf2.name username_2'\
-        'from matchs orig'\
-        '   inner join profiles pf1 on orig.userid_qualificator = pf1.userid'\
-        '   inner join matchs dest on orig.userid_qualificated = dest.userid_qualificator'\
-        '   inner join profiles pf2 on orig.userid_qualificated = pf2.userid'\
-        'where orig.qualification = :like'\
-        '  and dest.qualification = :like'\
-        '  and orig.userid_qualificator = :id'
+        ' Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,'\
+        '        orig.qualification qualification_1, dest.qualification qualification_2,'\
+        '        pf1.username username_1, pf2.username username_2'\
+        ' from matchs orig'\
+        '    inner join profiles pf1 on orig.userid_qualificator = pf1.userid'\
+        '    inner join matchs dest on orig.userid_qualificated = dest.userid_qualificator and orig.userid_qualificator = dest.userid_qualificated'\
+        '    inner join profiles pf2 on orig.userid_qualificated = pf2.userid'\
+        ' where orig.qualification = :like'\
+        '   and dest.qualification = :like'\
+        '   and orig.userid_qualificator = :id'
     
     results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
     for result in results:
@@ -106,12 +106,11 @@ async def filter(
     
     arguments = { 'id': id }
     sql_query = \
-        'Select pf.*'\
-        'from profiles pf'\
-        '   left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated'\
-        'where pf.userid <> :id and m.id is null'\
-        'order by pf.is_match_plus desc'
-    
+        'Select pf.* '\
+        'from profiles pf '\
+        '   left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated '\
+        'where pf.userid <> :id and m.id is null '
+        
     if (gender != None):
         sql_query += ' and pf.gender = :gender'
         arguments["gender"] = gender
@@ -132,7 +131,8 @@ async def filter(
         sql_query += ' and pf.ethnicity = :ethnicity'
         arguments["ethnicity"] = ethnicity
     
-    
+    sql_query += ' order by pf.is_match_plus desc , pf.userid '
+	
     results = await client_db.fetch_one(query = sql_query, values = arguments) 
     #TODO: revisar porque falla el return de los datos obtenidos por la query
     if(not results):
@@ -151,15 +151,15 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         matchs.c.userid_qualificator == match.userid_qualificator,
         matchs.c.userid_qualificated == match.userid_qualificated
     )
-    client_db.execute(old_del)
+    await client_db.execute(old_del)
 
-    client.matchs.insert().values(
+    new_match=client.matchs.insert().values(
         userid_qualificator = match.userid_qualificator,
         userid_qualificated = match.userid_qualificated,
         qualification = match.qualification
     )
 
-    client_db.execute()
+    await client_db.execute(new_match)
 
 #FALTA
 

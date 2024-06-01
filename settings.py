@@ -22,4 +22,4 @@ class Settings(BaseSettings):
     db_name:str=local_db_name
     db_credentials:str=''
 	
-    model_config = SettingsConfigDict(env_file=("dev.env",".env"))
+    model_config = SettingsConfigDict(env_file=("dev.env",".env"))	

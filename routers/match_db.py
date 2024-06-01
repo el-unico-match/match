@@ -7,13 +7,13 @@ from typing import List,Union
 from bson import ObjectId
 from settings import Settings
 from sqlalchemy import and_
-#import logging
+import logging
 import data.client as client
 
 settings=Settings()
 
-#logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
-#logger=logging.getLogger(__name__)  
+logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
+logger=logging.getLogger(__name__)  
 			
 def profile_schema(profile)-> dict:
 #    print(profile)
@@ -75,6 +75,7 @@ async def view_status():
 @router.get("/user/{id}/matchs",response_model=List[MatchOut]
 ,summary="Retorna una lista con todos los matchs")
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
+    logger.error("retornando lista de matchs")
 #    print("Implementar lista de matchs")
 #   matchs=[]
 #   matchs.append(
@@ -103,6 +104,12 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
 #@router.get("/user/{id}/matchs/filter",response_model=List[Profile],summary="Retorna un perfil que coincida con el filtro!!")
 @router.get("/user/{id}/profiles/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
 async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
+    logger.error("retornando perfil que coincida con el filtro")
+    query = "SELECT * FROM profiles WHERE profiles.userid = :id"
+    result = await client_db.fetch_one(query=query, values={"id": id})
+    print(result)
+    if not result:
+        raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
     return await filter_version_2(id,gender,age,education,ethnicity,client_db)
 
 async def filter_version_1(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
@@ -215,11 +222,12 @@ async def filter_version_2(id:str,gender:Union[str, None] = None,age:Union[int, 
 #    return Profile(**profile_schema(results))
     #TODO: revisar porque falla el return de los datos obtenidos por la query
     if(not results):
-       raise HTTPException(status_code=404,detail="No se han encontrado personas para esta consulta")	    
+       raise HTTPException(status_code=404,detail="No se han encontrado perfiles para esta consulta")	    
     return profile_schema(results)  
 
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):
+    logger.error("agregando un nuevo match")
     await define_preference_version_2(id,match,client_db)
 
 async def define_preference_version_1(id:str,
@@ -369,12 +377,20 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
 	education =new_profile.education,
 	ethnicity =new_profile.ethnicity
 	)
-    await client_db.execute(query)
+    logger.info("creando el perfil en base de datos")	
+    try:
+        await client_db.execute(query)
+    except Exception as e:
+#      logger.error(str(e))
+        print(e)
+        logger.error("el perfil ya existe")      				
+        raise HTTPException(status_code=400,detail="El perfil ya existe")  		
 #    print("Implementar funcionalidad de creación de perfil")
 	  
 @router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
 async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario"))-> None:     
-    query = client.profiles.update().values(userid =updated_profile.userid,
+    profiles=client.profiles
+    query = profiles.update().where(profiles.columns.userid ==updated_profile.userid).values(
 	username =updated_profile.username,
 	email =updated_profile.email,
 	description =updated_profile.description,
@@ -384,5 +400,18 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
 	education =updated_profile.education,
 	ethnicity =updated_profile.ethnicity
 	)
-    await client_db.execute(query)
+    logger.info("actualizando el perfil en base de datos")
+    try: 	
+        await client_db.execute(query)
+        ##query_result = "SELECT * FROM profiles WHERE userid = :id"		
+        #query_result=profiles.select().where(profiles.columns.userid ==updated_profile.userid)
+        #result=await client_db.fetch_one(query=query_result)
+        #print (result)
+        #return profile_schema(result)  		
+    except Exception as e:
+#      logger.error(str(e))
+        print(e)
+        logger.error("no se ha encontrado el perfil")      		
+        raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
 #    print("Implementar funcionalidad de actualización de perfil")
+    

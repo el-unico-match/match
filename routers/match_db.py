@@ -4,8 +4,9 @@ from data.profile import Profile
 from typing import List,Union
 from settings import Settings
 from datetime import datetime
-import logging
 import data.client as client
+import logging
+import math
 
 settings=Settings()
 
@@ -144,14 +145,23 @@ async def filter(
     if (distance != None):
         for row in results:
             # Para mejorar presicion usar cuentas correctas
+            earth_rad = 6371000.0 # valor en metros
+            #earth_rad = 63710.0   # valor en cuadras
+            #earth_rad = 6371.0    # valor en kilometros
 
-            # A cortas distancias lo aproximamos como si fuesen un plano
-            xdist = row["latitud"] - myprofile["latitud"]
-            ydist = row["longitud"] - myprofile["longitud"]
+            lat1 = math.radians(row["latitud"])
+            lon1 = math.radians(row["longitud"])
+            lat2 = math.radians(myprofile["latitud"])
+            lon2 = math.radians(myprofile["longitud"])
             
-            # Distancia al cuadrado
-            dist = xdist*xdist + ydist*ydist
-            if (dist < (distance*distance)):
+            # Differences in coordinates
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            aux1 = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+            aux2 = 2 * math.atan2(math.sqrt(aux1), math.sqrt(1 - aux1))
+
+            dist = earth_rad * aux2
+            if (dist < distance):
                 return profile_schema(row)
     
     #TODO: revisar porque falla el return de los datos obtenidos por la query

@@ -16,22 +16,15 @@ logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)  
 			
 def profile_schema(profile)-> dict:
-#    print(profile)
-#    print(profile["userid"])
-#    print(profile["username"])
     schema= {"userid":profile["userid"],
          	"username":profile["username"],
-	        "email":profile["email"],
-			"description":profile["description"],
 			"gender":profile["gender"],
 			"looking_for":profile["looking_for"],
 			"age":int(profile["age"]),
 			"education":profile["education"],
-	        "ethnicity":profile["ethnicity"]
+	        "ethnicity":profile["ethnicity"],
+            "is_match_plus":profile["is_match_plus"]
 			}
-#    print("schema:")
-#    print(schema)
-#    print(type(schema))
     return schema			
 
 def profiles_schema(profiles)-> list:
@@ -41,19 +34,18 @@ def profiles_schema(profiles)-> list:
    return list			
 
 def match_schema(match)-> dict:
-#    print(profile)
-#    print(profile["userid"])
-#    print(profile["username"])
-    schema= {"id":match["id"],
-         	"userid_1":match["userid_1"],
-	        "qualification_1":match["qualification_1"],
-			"userid_2":match["userid_2"],
-			"username_2":match["username_2"],
-			"qualification_2":match["qualification_2"]
-			}
-#    print("schema:")
-#    print(schema)
-#    print(type(schema))
+    schema= {
+        "myself": {
+            "userid":match["userid_1"],
+            "username":match["username_1"],
+            "qualification":match["qualification_1"],
+        },
+        "matched": {
+            "userid":match["userid_2"],
+            "username":match["username_2"],
+            "qualification":match["qualification_2"]
+        }
+    }
     return schema
 
 def matchs_schema(matchs)-> list:
@@ -64,9 +56,7 @@ def matchs_schema(matchs)-> list:
 	
 router=APIRouter(tags=["match"])
 
-
 # Operaciones de la API
-
 @router.get("/status",summary="Retorna el estado del servicio")
 async def view_status(): 
     logger.info("retornando status")
@@ -76,258 +66,92 @@ async def view_status():
 ,summary="Retorna una lista con todos los matchs")
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
     logger.error("retornando lista de matchs")
-#    print("Implementar lista de matchs")
-#   matchs=[]
-#   matchs.append(
-#   Match(matchid = "66304a6b2891cdcfebdbdc6f",
-#   userid_1 = "1",
-#   qualification_1 = "like",
-#   userid_2 = "2",
-#   qualification_2 = "like"))
-#   return matchs
-#    query = client.matchs.filter(matchs.userid_1==id,matchs.qualification_1 == "like",matchs.qualification_2 == "like")
-##    matchs=client.matchs
-##    query = matchs.select().where(and_(matchs.columns.userid_1==id,matchs.columns.qualification_1 == "like",matchs.columns.qualification_2 == "like") )
-#    query = matchs.select().where(matchs.columns.qualification_2 == "like")
-    select_clause=' SELECT matchs.id,matchs.userid_1,matchs.qualification_1,matchs.userid_2,profiles.username as username_2,matchs.qualification_2'
-    from_clause=' FROM profiles'
-    join_clause=' FULL OUTER JOIN matchs ON matchs.userid_2 = profiles.userid'
-    where_clause=' WHERE matchs.userid_1=:id AND matchs.qualification_1 = :qualification AND matchs.qualification_2 = :qualification'
-    matchs_results = select_clause+from_clause+join_clause+where_clause
-#    return await client_db.fetch_all(query)
-    results=await client_db.fetch_all(query=matchs_results,values={"id":id,"qualification":"like"})
+
+    sql_query = \
+        'Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,'\
+        '       orig.qualification qualification_1, dest.qualification qualification_2,'\
+        '       pf1.name username_1, pf2.name username_2'\
+        'from matchs orig'\
+        '   inner join profiles pf1 on orig.userid_qualificator = pf1.userid'\
+        '   inner join matchs dest on orig.userid_qualificated = dest.userid_qualificator'\
+        '   inner join profiles pf2 on orig.userid_qualificated = pf2.userid'\
+        'where orig.qualification = :like'\
+        '  and dest.qualification = :like'\
+        '  and orig.userid_qualificator = :id'
+    
+    results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
     for result in results:
 	    print(tuple(result.values()))
-    return matchs_schema(results)    
+
+    return matchs_schema(results) 
 	
 #@router.get("/user/{id}/matchs/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro")
 #@router.get("/user/{id}/matchs/filter",response_model=List[Profile],summary="Retorna un perfil que coincida con el filtro!!")
 @router.get("/user/{id}/profiles/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
-async def filter(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
+async def filter(
+    id:str,
+    gender:Union[str, None] = None,
+    age_from:Union[int, None] = None,
+    age_to:Union[int, None] = None,
+    education:Union[str, None] = None,
+    ethnicity:Union[str, None] = None,
+    client_db = Depends(client.get_db)
+):
     logger.error("retornando perfil que coincida con el filtro")
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
-    result = await client_db.fetch_one(query=query, values={"id": id})
+    result = await client_db.fetch_one(query = query, values={"id": id})
     print(result)
     if not result:
         raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
-    return await filter_version_2(id,gender,age,education,ethnicity,client_db)
-
-async def filter_version_1(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
-##    print("Implementar filtro")
-#    return Profile(userid = "66304a6b2891cdcfebdbdc6f",
-#   username = "Margot Robbie",
-#   email = "mrobbie@hollywood.com",
-#   description = "Actress",
-#   gender = "Mujer",
-#   looking_for = "Hombre",
-#   age = 33,
-#   education = "Estudios secundarios",
-#   ethnicity = "") 	
-##    query = client.profiles.filter(profiles.gender == gender, profiles.age==age,profiles.education==education,profiles.ethnicity==ethnicity)
-##	return await client_db.fetch_all(query)
-
-
-#probar esto
-    arguments = {}
-    select_clause='SELECT *'# profiles.userid,profiles.username ,profiles.email ,profiles.description,profiles.gender,profiles.looking_for,profiles.age,profiles.education,profiles.ethnicity'
-    from_clause=' FROM profiles'
-    join_clause=' FULL OUTER JOIN matchs ON profiles.userid = matchs.userid_2'# AND profiles.userid = matchs.userid_1'
-    where_clause=''# WHERE matchs.userid_1=:id'# AND matchs.id IS NULL'	
-    query_ = select_clause+from_clause+join_clause+where_clause
-#    query_ = 'SELECT * FROM profiles JOIN matchs ON matchs.userid_2 = profiles.userid WHERE matchs.userid_1 = :id'
-#    arguments['id']=id
-    if ( gender != None):
-        print("filtrar por genero") 
-        query_  =query_  + ' AND profiles.gender = :gender'
-        arguments['gender']=gender
-    if ( age != None):
-        print("filtrar por edad") 	
-        query_  =query_  + ' AND profiles.age = :age'
-        arguments['age']=age
-    if ( education != None):
-        print("filtrar por educacion") 	
-        query_  =query_  + ' AND profiles.education = :education'
-        arguments['education']=education
-    if ( ethnicity != None):
-        print("filtrar por etnia") 	
-        query_  =query_  + ' AND profiles.ethnicity = :ethnicity'
-        arguments['ethnicity']=ethnicity
-
-    print(query_)
-    print(arguments)
-#    return await client_db.fetch_all(query=query_,values=arguments)	
-#    return await client_db.fetch_all(query = 'SELECT * FROM profiles WHERE true',values={})
-#    select_clause='SELECT profiles.userid,profiles.username ,profiles.email ,profiles.description,profiles.gender,profiles.looking_for,profiles.age,profiles.education,profiles.ethnicity'
-#    from_clause=' FROM matchs'
-#    join_clause=' FULL OUTER JOIN profiles ON profiles.userid = matchs.userid_2'
-#    where_clause=' WHERE matchs.id IS NULL'	
-#    query = select_clause+from_clause+join_clause+where_clause
-#    print(query)
-    results= await client_db.fetch_all(query=query_,values=arguments)
-    for result in results:
-	    print(tuple(result.values()))
-    return ""
-
-async def filter_version_2(id:str,gender:Union[str, None] = None,age:Union[int, None] = None,education:Union[str, None] = None,ethnicity:Union[str, None] = None,client_db = Depends(client.get_db)):
-
-    arguments = {}
-	#obtengo todos los perfiles que no son los de userid_1
-    all_profiles='SELECT * FROM profiles WHERE profiles.userid <> :id'
-	
-	#obtengo los perfiles a los que el userid_1 le dio like o dislike (es decir cuya qualification_2 no es nula)
-    select_clause=' SELECT profiles.userid,profiles.username ,profiles.email ,profiles.description,profiles.gender,profiles.looking_for,profiles.age,profiles.education,profiles.ethnicity'
-    from_clause=' FROM profiles'
-    join_clause=' FULL OUTER JOIN matchs ON matchs.userid_2 = profiles.userid'
-    where_clause=' WHERE matchs.userid_1=:id AND matchs.qualification_2 IS NOT NULL'
-    viewed_profiles = select_clause+from_clause+join_clause+where_clause
-
-    arguments['id']=id
-	
-	#agrego los filtros que corresponda
-    if ( gender != None):
-        print("filtrar por genero") 
-        all_profiles  =all_profiles  + ' AND profiles.gender = :gender'
-        viewed_profiles  =viewed_profiles  + ' AND profiles.gender = :gender'
-        arguments['gender']=gender
-    if ( age != None):
-        print("filtrar por edad") 	
-        all_profiles  =all_profiles  + ' AND profiles.age = :age'
-        viewed_profiles  =viewed_profiles  + ' AND profiles.age = :age'
-        arguments['age']=age
-    if ( education != None):
-        print("filtrar por educacion") 	
-        all_profiles  =all_profiles  + ' AND profiles.education = :education'
-        viewed_profiles  =viewed_profiles  + ' AND profiles.education = :education'
-        arguments['education']=education
-    if ( ethnicity != None):
-        print("filtrar por etnia") 	
-        all_profiles  =all_profiles  + ' AND profiles.education = :education'
-        viewed_profiles  =viewed_profiles  + ' AND profiles.education = :education'
-        arguments['ethnicity']=ethnicity
-
-    #me quedo solo con los perfiles que no ha visto todavía el usuario		
-    query_=all_profiles+' EXCEPT'+viewed_profiles
-		
-    print(query_)
-    print(arguments)
-
-#    results= await client_db.fetch_all(query=query_,values=arguments)
-#    for result in results:
-#	    print(tuple(result.values()))
-#    return ""	
-    results = await client_db.fetch_one(query=query_,values=arguments) 
-#    print({**results})
-#    print(type({**results}))
-#    print({results["userid"],results["username"]})
-#    return Profile(**profile_schema(results))
+    
+    arguments = { 'id': id }
+    sql_query = \
+        'Select pf.*'\
+        'from profiles pf'\
+        '   left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated'\
+        'where pf.userid <> :id and m.id is null'\
+        'order by pf.is_match_plus desc'
+    
+    if (gender != None):
+        sql_query += ' and pf.gender = :gender'
+        arguments["gender"] = gender
+    
+    if (age_from != None):
+        sql_query += ' and pf.age >= :age_from'
+        arguments["age_from"] = age_from
+    
+    if (age_to != None):
+        sql_query += ' and pf.age <= :age_to'
+        arguments["age_to"] = age_to
+    
+    if (education != None):
+        sql_query += ' and pf.education = :education'
+        arguments["education"] = education
+    
+    if (ethnicity != None):
+        sql_query += ' and pf.ethnicity = :ethnicity'
+        arguments["ethnicity"] = ethnicity
+    
+    
+    results = await client_db.fetch_one(query = sql_query, values = arguments) 
     #TODO: revisar porque falla el return de los datos obtenidos por la query
     if(not results):
        raise HTTPException(status_code=404,detail="No se han encontrado perfiles para esta consulta")	    
     return profile_schema(results)  
 
+#match/swipe
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):
     logger.error("agregando un nuevo match")
-    await define_preference_version_2(id,match,client_db)
-
-async def define_preference_version_1(id:str,
-match:MatchIn,client_db = Depends(client.get_db)):
-#async def define_preference(id:str,candidateid:str,qualification:str,client_db = Depends(client.get_db)):
-#    print("Implementar funcionalidad de like y dislike")
-#
-# La tabla de match va a tener que tener siempre dos filas por cada operación:
-# la calificación que dio el usuario 1 al usuario 2, y la calificación que recibio #el usuario 1 del usuario 2 (esto es porque sin estas dos filas va a resultar más #dificil poder filtrar perfiles en otras operaciones del microservicio)
-# ejemplo:
-# userid_1,qualification_1,userid_2,qualification_2
-# 3,null,2,like
-# 2,like,3,null
-
-#    matchs=client.matchs
-#    query_1=matchs.select().where(and_(matchs.columns.userid_1==match.userid_1,matchs.columns.userid_2==match.userid_2))
-#    record_id_1 = await client_db.execute(query_1)
-    record_id_1 = await find_match(client_db,match.userid_1,match.userid_2)
-    print(record_id_1)
-#    return record_id
-    if(record_id_1):
-#        query_2=update_preference(match.userid_1,match.qualification_1,match.userid_2,match.qualification_2)
-        print("actualización 1 de match")  
-        query_1=update_preference_1(record_id_1,match.userid_1,match.userid_2,match.qualification_2)
-    else:
-#        query_1=matchs.select().where(and_(matchs.columns.userid_2==match.userid_1,matchs.columns.userid_1==match.userid_2))
-#        record_id_2 = await client_db.execute(query_1)
-        record_id_2 = await find_match(client_db,match.userid_2,match.userid_1)
-        print(record_id_2)
-        if(record_id_2):
-#            query_2=update_preference(match.userid_2,match.qualification_2,match.userid_1,match.qualification_1)
-            print("actualización 2 de match") 
-            query_1=update_preference_2(record_id_2,match.userid_1,match.userid_2,match.qualification_2)
-        else:
-#            query_2=insert_preference(match.userid_1,match.qualification_1,match.userid_2,match.qualification_2)
-            print("inserción de nuevo de match") 
-            query_1=insert_preference(match.userid_1,match.userid_2,match.qualification_2)
-
-
-
-#	query_2 = insert.values(
-##	matchid =match.matchid,
-#	userid_1 =match.userid_1,
-#    qualification_1 =match.qualification_1,
-#    userid_2 =match.userid_2,
-#    qualification_2 =match.qualification_2
-#    )
-##    print("query:"+str(query))
-
-    last_record_id = await client_db.execute(query_1)
-    return {**match.dict(),"matchid": last_record_id}
-
-async def define_preference_version_2(id:str,
-match:MatchIn,client_db = Depends(client.get_db)):	
-	#buscar si en la tabla de match aparece el match asociado al usuario 1 y usuario 2
-	#si aparece entonces: 
-    #buscar el match asociado al usuario 2 y usuario 1
-	#actualizar ambos registros
-    #sino aparece entonces:
-    #crear ambos registros	
-
-    matchs=client.matchs	
-	#busco si en la tabla de match aparece el match asociado al usuario 1 y usuario 2
-    record_id_1 = await find_match(client_db,match.userid_1,match.userid_2)
-    print(record_id_1)
-    if(record_id_1):	
-        #busco el match asociado al usuario 2 y usuario 1
-        record_id_2 = await find_match(client_db,match.userid_2,match.userid_1)
-        print(record_id_2)
-        #actualizo ambos registros	
-        print("actualización de match")  		
-        query_1=matchs.update().where(matchs.columns.id == record_id_1).values(
-    userid_1 =match.userid_1,
-    userid_2 =match.userid_2,
-    qualification_2 =match.qualification_2
-    )
-        query_2=matchs.update().where(matchs.columns.id == record_id_2).values(
-    userid_1 =match.userid_2,
-    userid_2 =match.userid_1,
-    qualification_1 =match.qualification_2
-    )
-    else:
-        #creo ambos registros
-        print("inserción de nuevo de match")
-        query_1=matchs.insert().values(
-    userid_1 =match.userid_1,
-    userid_2 =match.userid_2,
-    qualification_2 =match.qualification_2
-    )
-        query_2=matchs.insert().values(
-    userid_1 =match.userid_2,
-    userid_2 =match.userid_1,
-    qualification_1 =match.qualification_2
+    
+    client.matchs.insert().values(
+        userid_qualificator = match.userid_qualificator,
+        userid_qualificated = match.userid_qualificated,
+        qualification = match.qualification
     )
 
-    last_record_id_1 = await client_db.execute(query_1)
-    last_record_id_2 = await client_db.execute(query_2)
-#    print({"matchid": last_record_id_1,"userid_1":match.userid_1,"qualification_1":None,"userid_2":match.userid_2,"qualification_2":match.qualification_2})
-#    print({"matchid": last_record_id_2,"userid_1":match.userid_2,"qualification_1":match.qualification_2,"userid_2":match.userid_1,"qualification_2":None})	
-		
+#FALTA
+
 def find_match(client_db,the_user_1,the_user_2):
     matchs=client.matchs
     query=matchs.select().where(and_(matchs.columns.userid_1==the_user_1,matchs.columns.userid_2==the_user_2))
@@ -368,14 +192,13 @@ def insert_preference(the_userid_1,the_userid_2,the_qualification_2):
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_class=Response)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))-> None: 
     query = client.profiles.insert().values(userid =new_profile.userid,
-	username =new_profile.username,
-	email =new_profile.email,
-	description =new_profile.description,
-	gender =new_profile.gender,
-	looking_for =new_profile.looking_for,
-	age =new_profile.age,
-	education =new_profile.education,
-	ethnicity =new_profile.ethnicity
+        username =new_profile.username,
+        gender =new_profile.gender,
+        looking_for =new_profile.looking_for,
+        age =new_profile.age,
+        education =new_profile.education,
+        ethnicity =new_profile.ethnicity,
+        is_match_plus=False
 	)
     logger.info("creando el perfil en base de datos")	
     try:
@@ -389,17 +212,17 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
 	  
 @router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
 async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario"))-> None:     
-    profiles=client.profiles
+    profiles = client.profiles
     query = profiles.update().where(profiles.columns.userid ==updated_profile.userid).values(
-	username =updated_profile.username,
-	email =updated_profile.email,
-	description =updated_profile.description,
-	gender =updated_profile.gender,
-	looking_for =updated_profile.looking_for,
-	age =updated_profile.age,
-	education =updated_profile.education,
-	ethnicity =updated_profile.ethnicity
-	)
+        username = updated_profile.username,
+        gender = updated_profile.gender,
+        looking_for = updated_profile.looking_for,
+        age = updated_profile.age,
+        education = updated_profile.education,
+        ethnicity = updated_profile.ethnicity,
+        is_match_plus = updated_profile.is_match_plus
+    )
+
     logger.info("actualizando el perfil en base de datos")
     try: 	
         await client_db.execute(query)

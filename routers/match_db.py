@@ -143,25 +143,36 @@ async def filter(
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):
     logger.error("agregando un nuevo match")
-    
+    matchs = client.matchs
+
+    # Por las dudas pero no deberia pasar
+    # porque solo se muestran par hacer match los que no fueron calificados
+    old_del = matchs.delete().where(
+        matchs.c.userid_qualificator == match.userid_qualificator,
+        matchs.c.userid_qualificated == match.userid_qualificated
+    )
+    client_db.execute(old_del)
+
     client.matchs.insert().values(
         userid_qualificator = match.userid_qualificator,
         userid_qualificated = match.userid_qualificated,
         qualification = match.qualification
     )
 
+    client_db.execute()
+
 #FALTA
 
 def find_match(client_db,the_user_1,the_user_2):
     matchs=client.matchs
     query=matchs.select().where(and_(matchs.columns.userid_1==the_user_1,matchs.columns.userid_2==the_user_2))
-#    record_id_1=await client_db.execute(query)    	
-#    print("record_id:"+(record_id_1))
-#    return record_id_1
     return client_db.execute(query)
 	
 def update_preference_1(the_matchid,the_userid_1,the_userid_2,the_qualification_2):
     matchs=client.matchs
+
+
+
     return matchs.update().where(matchs.columns.id == the_matchid).values(
 #    id =the_matchid,
     userid_1 =the_userid_1,

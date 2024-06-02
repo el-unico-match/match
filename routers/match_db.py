@@ -316,7 +316,7 @@ async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(c
     sql_query = \
         ' update matchs '\
         ' set blocked = TRUE '\
-        ' where m.userid_qualificator = :blocker and m.userid_qualificated = :blocked '
+        ' where matchs.userid_qualificator = :blocker and matchs.userid_qualificated = :blocked '
 
     await client_db.execute(query = sql_query, values = { 
         "blocker": userid_bloquer,

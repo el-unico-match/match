@@ -201,24 +201,24 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             raise HTTPException(status_code=400,detail="Usuario normal no puede dar superlikes")
 
         if (myprofile['last_like_date'].date() < datetime.now().date()):
-            newvalues.like_counter = 0
+            newvalues['like_counter'] = 0
 
         if (myprofile['like_counter'] > settings.LIKE_LIMITS):
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de likes")
         
         if (match.qualification == 'like'):
-            newvalues.last_like_date = datetime.now()
-            newvalues.like_counter += 1
+            newvalues['last_like_date'] = datetime.now()
+            newvalues['like_counter'] += 1
     else:
         if (myprofile['last_like_date'].date() < datetime.now().date()):
-            newvalues.superlike_counter = 0
+            newvalues['superlike_counter'] = 0
         
         if (myprofile['superlike_counter'] > settings.SUPERLIKE_LIMITS):
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de superlikes")
         
         if (match.qualification == 'superlike'):
-            newvalues.last_like_date = datetime.now()
-            newvalues.superlike_counter += 1
+            newvalues['last_like_date'] = datetime.now()
+            newvalues['superlike_counter'] += 1
 
     query = """
         update profiles 

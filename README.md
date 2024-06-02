@@ -1,16 +1,18 @@
 # match
 
 > __versión actual:__\
-> 0.0.7
+> 0.0.8
 > \
 > __Funcionalidades actuales:__\
 > \
 > Creación de nuevo perfil\
 > Actualización de perfil solicitado\
-> Incorporación de un nuevo match (con mejoras)\
+> Incorporación de un nuevo match\
 > Consulta de todos los matchs correspondientes a un usuario\
 > Consulta de todos los matchs\
-> Consulta de perfil que coincida con el filtro (cambio de endpoint)
+> Consulta de perfil que coincida con el filtro\
+> Notificación de envío de mensaje\
+> Bloqueo de usuario
 
 
 # Instrucciones

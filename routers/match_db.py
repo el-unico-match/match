@@ -300,10 +300,11 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
 @router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
 async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
     sql_query = \
+    sql_query = \
         ' update matchs '\
         ' set last_message_date = NOW() '\
-        ' where m.userid_qualificator = :sender and m.userid_qualificated = :reciever or '\
-        '       m.userid_qualificator = :reciever and m.userid_qualificated = :sender '
+        ' where matchs.userid_qualificator = :sender and matchs.userid_qualificated = :reciever or '\
+        '       matchs.userid_qualificator = :reciever and matchs.userid_qualificated = :sender '
 
     await client_db.execute(query = sql_query, values = { 
         "sender": userid_sender,

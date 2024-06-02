@@ -235,7 +235,7 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     # porque solo se muestran par hacer match los que no fueron calificados
     old_del = matchs.delete().where(
         matchs.columns.userid_qualificator == match.userid_qualificator,
-        matchs.columns.userid_qualificated == match.userid_qualificated,
+        matchs.columns.userid_qualificated == match.userid_qualificated
     )
     await client_db.execute(old_del)
 

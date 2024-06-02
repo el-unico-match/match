@@ -14,6 +14,5 @@ class Profile(BaseModel):
    is_match_plus: bool
    latitud: float
    longitud: float
-   last_like_date: datetime
    like_counter: int
    superlike_counter: int

@@ -243,7 +243,6 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
         is_match_plus     = False,
         latitud           = new_profile.latitud,
         longitud          = new_profile.longitud,
-        last_like_date    = new_profile.last_like_date,
         like_counter      = new_profile.like_counter,
         superlike_counter = new_profile.superlike_counter
 	)
@@ -268,7 +267,6 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
         is_match_plus     = updated_profile.is_match_plus,
         latitud           = updated_profile.latitud,
         longitud          = updated_profile.longitud,
-        last_like_date    = updated_profile.last_like_date,
         like_counter      = updated_profile.like_counter,
         superlike_counter = updated_profile.superlike_counter
     )

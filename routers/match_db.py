@@ -82,7 +82,7 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
         ' where orig.qualification = :like'\
         '   and dest.qualification = :like'\
         '   and orig.userid_qualificator = :id'\
-        '   and not orig.bloqued and not dest.blocked'\
+        '   and not orig.blocked and not dest.blocked'\
         ' order by orig.last_message_date desc'
     
     results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})

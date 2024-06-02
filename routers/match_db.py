@@ -190,6 +190,7 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
     newvalues = {
+        "id": id,
         "last_like_date": myprofile["last_like_date"],
         "like_counter": myprofile["like_counter"],
         "superlike_counter": myprofile["superlike_counter"]
@@ -224,8 +225,9 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         set last_like_date = :last_like_date,
             superlike_counter = :superlike_counter,
             like_counter = :like_counter
+        where userid = :id
     """
-    
+
     await client_db.execute(query = query, values = newvalues)
 
     matchs = client.matchs

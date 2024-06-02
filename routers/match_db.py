@@ -189,34 +189,44 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
-    
+    newvalues = {
+        "last_like_date": myprofile["last_like_date"],
+        "like_counter": myprofile["like_counter"],
+        "superlike_counter": myprofile["superlike_counter"]
+    }
+
     if (not myprofile['is_match_plus']):
         if (match.qualification == 'superlike'):
             raise HTTPException(status_code=400,detail="Usuario normal no puede dar superlikes")
 
         if (myprofile['last_like_date'].date() < datetime.now().date()):
-            myprofile.like_counter = 0
+            newvalues.like_counter = 0
 
         if (myprofile['like_counter'] > settings.LIKE_LIMITS):
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de likes")
         
         if (match.qualification == 'like'):
-            myprofile.last_like_date = datetime.now()
-            myprofile.like_counter += 1
+            newvalues.last_like_date = datetime.now()
+            newvalues.like_counter += 1
     else:
         if (myprofile['last_like_date'].date() < datetime.now().date()):
-            myprofile.superlike_counter = 0
+            newvalues.superlike_counter = 0
         
         if (myprofile['superlike_counter'] > settings.SUPERLIKE_LIMITS):
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de superlikes")
         
         if (match.qualification == 'superlike'):
-            myprofile.last_like_date = datetime.now()
-            myprofile.superlike_counter += 1
+            newvalues.last_like_date = datetime.now()
+            newvalues.superlike_counter += 1
 
-    profiles = client.profiles
-    query = profiles.update().where(profiles.columns.userid == id).values(myprofile)
-    await client_db.execute(query)
+    query = """
+        update profiles 
+        set last_like_date = :last_like_date,
+            superlike_counter = :superlike_counter,
+            like_counter = :like_counter
+    """
+    
+    await client_db.execute(query = query, values = newvalues)
 
     matchs = client.matchs
     # Por las dudas pero no deberia pasar

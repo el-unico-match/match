@@ -248,8 +248,10 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
 
     await client_db.execute(new_match)
 
-@router.post("/user/match/profile",summary="Crea un nuevo perfil", response_class=Response)
-async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))-> None: 
+#@router.post("/user/match/profile",summary="Crea un nuevo perfil", response_class=Response)
+#async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))-> None: 
+@router.post("/user/match/profile",summary="Crea un nuevo perfil", response_model=Profile)
+async def create_profile(new_profile:Profile,client_db = Depends(client.get_db)): 
     query = client.profiles.insert().values(userid =new_profile.userid,
         username          = new_profile.username,
         gender            = new_profile.gender,
@@ -267,13 +269,23 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
     logger.info("creando el perfil en base de datos")	
     try:
         await client_db.execute(query)
+        #query = client.profiles.select().where(profiles.userid = new_profile.userid)
+        query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
+        result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})	
+
+        print(tuple(result.values()))    
+        return profile_schema(result)
     except Exception as e:
         print(e)
         logger.error(e)
         raise HTTPException(status_code=400,detail="El perfil ya existe")
-	  
-@router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
-async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario"))-> None:     
+
+
+	
+#@router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
+#async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario"))-> None:     
+@router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_model=Profile)
+async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario")):     
     profiles = client.profiles
     query = profiles.update().where(profiles.columns.userid ==updated_profile.userid).values(
         username          = updated_profile.username,
@@ -292,6 +304,12 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
     logger.info("actualizando el perfil en base de datos")
     try: 	
         await client_db.execute(query)		
+        #query = client.profiles.select().where(profiles.userid = updated_profile.userid)
+        query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
+        result = await client_db.fetch_one(query = query_2, values={"id": updated_profile.userid})	
+
+        print(tuple(result.values()))    
+        return profile_schema(result)
     except Exception as e:
         print(e)
         logger.error(e)

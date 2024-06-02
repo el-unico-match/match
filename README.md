@@ -6,8 +6,8 @@
 > __Funcionalidades actuales:__\
 > \
 > Creación de nuevo perfil\
-> Actualización de perfil solicitado\
-> Incorporación de un nuevo match\
+> Actualización de perfil solicitado (retorna el perfil actualizado)\
+> Incorporación de un nuevo match (retorna el perfil creado) \
 > Consulta de todos los matchs correspondientes a un usuario\
 > Consulta de todos los matchs\
 > Consulta de perfil que coincida con el filtro\

@@ -177,9 +177,12 @@ async def filter(
             dist = rad*rad*(xdist*xdist + ydist*ydist + zdist*zdist)
             if (dist < distance * distance):
                 return profile_schema(row)
+        raise HTTPException(status_code=200,detail="No se han encontrado perfiles para esta consulta")
     
+    if (results):
+        return profile_schema(results[0])
     #TODO: revisar porque falla el return de los datos obtenidos por la query
-    raise HTTPException(status_code=200,detail="No se han encontrado perfiles para esta consulta")	    
+    raise HTTPException(status_code=200,detail="No se han encontrado perfiles para esta consulta")
 
 #match/swipe
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
@@ -189,26 +192,26 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
     
-    if (not myprofile.is_match_plus):
-        if (myprofile.last_like_date.date() < datetime.now().date()):
-            myprofile.like_counter = 0
+    if (not myprofile['is_match_plus']):
+        if (myprofile['last_like_date'].date() < datetime.now().date()):
+            myprofile['like_counter'] = 0
 
-        if (myprofile.like_counter > settings.LIKE_LIMITS):
+        if (myprofile['like_counter'] > settings.LIKE_LIMITS):
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de likes")
         
         if (match.qualification == 'like'):
-            myprofile.last_like_date = datetime.now()
-            myprofile.like_counter += 1
+            myprofile['last_like_date'] = datetime.now()
+            myprofile['like_counter'] += 1
     else:
-        if (myprofile.last_like_date.date() < datetime.now().date()):
-            myprofile.superlike_counter = 0
+        if (myprofile['last_like_date'].date() < datetime.now().date()):
+            myprofile['superlike_counter'] = 0
         
-        if (myprofile.superlike_counter > settings.SUPERLIKE_LIMITS):
+        if (myprofile['superlike_counter'] > settings.SUPERLIKE_LIMITS):
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de superlikes")
         
         if (match.qualification == 'superlike'):
-            myprofile.last_like_date = datetime.now()
-            myprofile.superlike_counter += 1
+            myprofile['last_like_date'] = datetime.now()
+            myprofile['superlike_counter'] += 1
 
     profiles = client.profiles
     query = profiles.update().where(profiles.columns.userid == id).values(myprofile)

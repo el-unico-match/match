@@ -197,13 +197,20 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     }
 
     if (not myprofile['is_match_plus']):
+        #print(match.qualification)	
+        #print(myprofile['like_counter'])
+        #print(myprofile['username'])
+        #print(match.qualification == 'like')
+        #print(match.qualification == 'superlike')		
+        #print(settings.LIKE_LIMITS)		
         if (match.qualification == 'superlike'):
             raise HTTPException(status_code=400,detail="Usuario normal no puede dar superlikes")
 
         if (myprofile['last_like_date'].date() < datetime.now().date()):
             newvalues['like_counter'] = 0
 
-        if (myprofile['like_counter'] > settings.LIKE_LIMITS):
+        if (match.qualification == 'like' and myprofile['like_counter'] > settings.LIKE_LIMITS):
+            #print("entra al if")
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de likes")
         
         if (match.qualification == 'like'):
@@ -213,7 +220,7 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         if (myprofile['last_like_date'].date() < datetime.now().date()):
             newvalues['superlike_counter'] = 0
         
-        if (myprofile['superlike_counter'] > settings.SUPERLIKE_LIMITS):
+        if (match.qualification == 'superlike' and myprofile['superlike_counter'] > settings.SUPERLIKE_LIMITS):
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de superlikes")
         
         if (match.qualification == 'superlike'):

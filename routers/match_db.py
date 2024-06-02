@@ -360,6 +360,8 @@ async def get_match_swipes(
     swiper_name: Union[str,None] = None,
     superlikes: Union[bool, None] = None,
     matchs: Union[bool, None] = None,
+    likes: Union[bool, None] = None,
+    blocked: Union[bool, None] = None,
     client_db = Depends(client.get_db)
     ):
-    return await get_swipes_list(swiper_id, swiper_name, superlikes, matchs, client_db)
+    return await get_swipes_list(swiper_id, swiper_name, superlikes, matchs, likes, blocked, client_db)

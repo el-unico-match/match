@@ -29,12 +29,11 @@ async def get_swipes_list(
     swiper_name: Union[str,None],
     superlikes: Union[bool, None],
     matchs: Union[bool, None],
+    likes: Union[bool, None],
+    blocked: Union[bool, None],
     client_db: any):
 
     values = { 
-        # 'id': swiper_id,
-        # 'name': swiper_name,
-        # 'match': matchs,
         # "superlike": superlikes,
     }
 
@@ -60,8 +59,31 @@ async def get_swipes_list(
         '        LEFT JOIN matchs AS dest ON orig.userid_qualificated = dest.userid_qualificator AND orig.userid_qualificator = dest.userid_qualificated '\
         '		 INNER JOIN profiles AS pf1 ON pf1.userid = orig.userid_qualificator '\
         '        INNER JOIN profiles AS pf2 ON pf2.userid = orig.userid_qualificated '\
-        ' 		 WHERE dest.qualification_date IS NULL OR orig.qualification_date < dest.qualification_date '\
-        '        ORDER BY is_match DESC, dest.qualification_date DESC, orig.qualification_date DESC'
+        ' 		 WHERE ( dest.qualification_date IS NULL OR orig.qualification_date < dest.qualification_date ) '
+    
+    if (swiper_id is not None):
+        query += 'AND ((pf1.userid = :id) OR (pf2.userid = :id)) '
+        values['id'] = swiper_id
+
+    if (swiper_name is not None):
+        query += 'AND ((LOWER(pf1.username) LIKE :name) OR (LOWER(pf2.username) LIKE :name)) '
+        values['name'] = '%' + swiper_name.lower() + '%'
+
+    if (superlikes is not None and superlikes == True ):
+        query += 'AND ( orig.qualification = :qualification OR dest.qualification = :qualification) '
+        values['qualification'] = 'superlike'
+
+    if (matchs is not None and matchs == True ):
+        query += 'AND ( orig.qualification_date IS NOT NULL AND dest.qualification_date IS NOT NULL) '
+
+    if (likes is not None and likes == True ):
+        query += 'AND ( orig.qualification_date IS NULL OR dest.qualification_date IS NULL) '
+
+    if (blocked is not None ):
+        query += 'AND ( orig.blocked = :blocked OR dest.blocked = :blocked) '
+        values['blocked'] = blocked
+
+    query += ' ORDER BY is_match DESC, dest.qualification_date DESC, orig.qualification_date DESC'
 
     data = await client_db.fetch_all(query, values)
 

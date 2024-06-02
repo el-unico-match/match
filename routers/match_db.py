@@ -242,7 +242,8 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     new_match=client.matchs.insert().values(
         userid_qualificator = match.userid_qualificator,
         userid_qualificated = match.userid_qualificated,
-        qualification = match.qualification
+        qualification = match.qualification,
+        blocked = False
     )
 
     await client_db.execute(new_match)

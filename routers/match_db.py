@@ -191,6 +191,9 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
     
     if (not myprofile['is_match_plus']):
+        if (match.qualification == 'superlike'):
+            raise HTTPException(status_code=400,detail="Usuario normal no puede dar superlikes")
+
         if (myprofile['last_like_date'].date() < datetime.now().date()):
             myprofile['like_counter'] = 0
 
@@ -198,7 +201,7 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de likes")
         
         if (match.qualification == 'like'):
-            myprofile['last_like_date'] = datetime.now()
+            myprofile['last_like_date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             myprofile['like_counter'] += 1
     else:
         if (myprofile['last_like_date'].date() < datetime.now().date()):
@@ -208,7 +211,7 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             raise HTTPException(status_code=400,detail="Se alcanzo el limite de superlikes")
         
         if (match.qualification == 'superlike'):
-            myprofile['last_like_date'] = datetime.now()
+            myprofile['last_like_date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             myprofile['superlike_counter'] += 1
 
     profiles = client.profiles
@@ -244,7 +247,7 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
         is_match_plus     = False,
         latitud           = new_profile.latitud,
         longitud          = new_profile.longitud,
-        last_like_date    = datetime.now(),
+        last_like_date    = datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         like_counter      = new_profile.like_counter,
         superlike_counter = new_profile.superlike_counter
 	)

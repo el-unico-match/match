@@ -56,6 +56,7 @@ matchs = Table(
     Column("userid_qualificator", String),
     Column("userid_qualificated", String),
     Column("qualification", String),
+    Column("qualification_date", DateTime),
     Column("last_message_date", DateTime),
     Column("blocked", Boolean)
 )

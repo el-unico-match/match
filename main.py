@@ -1,6 +1,5 @@
 from fastapi import FastAPI
-from routers import match_db,match_admin
-from settings import Settings
+from routers import match_db
 	
 #settings=Settings()	
 
@@ -18,7 +17,6 @@ app=FastAPI(title="match",version="0.0.7",summary=summary)
 #   print("usa bd")
 #   app.include_router(match_db.router)
 app.include_router(match_db.router)
-app.include_router(match_admin.router)
 
 # HTTP response
 # 100 información

@@ -142,16 +142,16 @@ async def filter(
         sql_query += ' and pf.ethnicity = :ethnicity'
         arguments["ethnicity"] = ethnicity
 
-    sql_query += ' order by m2., pf.is_match_plus desc, pf.userid '
+    sql_query += ' order by m2.userid_qualificator desc, pf.is_match_plus desc, pf.userid '
 	
     results = await client_db.fetch_all(query = sql_query, values = arguments)
 
     if (distance != None):
         for row in results:
             # Para mejorar presicion usar cuentas correctas
-            rad = 6371000.0 # valor en metros
+            #rad = 6371000.0 # valor en metros
             #rad = 63710.0   # valor en cuadras
-            #rad = 6371.0    # valor en kilometros
+            rad = 6371.0    # valor en kilometros
 
             lat1 = math.radians(row["latitud"])
             lon1 = math.radians(row["longitud"])

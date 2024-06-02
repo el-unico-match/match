@@ -274,7 +274,7 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         userid_qualificator = match.userid_qualificator,
         userid_qualificated = match.userid_qualificated,
         qualification = match.qualification,
-        blocked = False
+        blocked = False,
         qualification_date = datetime.now(),
     )
 

@@ -1,14 +1,13 @@
 from fastapi import APIRouter,Path,Depends,Response,HTTPException
-from data.match import Match,MatchIn,MatchOut
+from data.match import Match,MatchIn,MatchOut, SwipesOut
 from data.profile import Profile
 from typing import List,Union
-from settings import Settings
+from endpoints.getSwipes import get_swipes_list
+from settings import settings
 from datetime import datetime
 import data.client as client
 import logging
 import math
-
-settings=Settings()
 
 logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)  
@@ -71,7 +70,7 @@ async def view_status():
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
     logger.error("retornando lista de matchs")
 
-    sql_query = \
+    sql_query2 = \
         ' Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,'\
         '        orig.qualification qualification_1, dest.qualification qualification_2,'\
         '        pf1.username username_1, pf2.username username_2'\
@@ -85,7 +84,37 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
         '   and not orig.blocked and not dest.blocked'\
         ' order by orig.last_message_date desc'
     
-    results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
+    sql_query = \
+    ' SELECT '\
+	'	pf1.username name_1, '\
+	' 	orig.userid_qualificator id_1, '\
+    '    orig.qualification qualification_1, '\
+	'	orig.qualification_date date_1, '\
+    '		orig.blocked blocker_1, '\
+	'	pf2.username name_2, '\
+	'	orig.userid_qualificated id_2, '\
+	' 	dest.qualification qualification_2, '\
+	'	dest.qualification_date date_2, '\
+	'	dest.blocked blocker_2, '\
+	'	CASE WHEN '\
+	'		orig.qualification_date IS NOT NULL AND '\
+	'		orig.blocked = "false" AND'\
+	'		dest.qualification_date IS NOT NULL AND '\
+	'		dest.blocked = "false" '\
+	'	THEN "true" ELSE "false" END AS is_match '\
+    '     FROM matchs orig  '\
+    '        LEFT JOIN matchs dest ON orig.userid_qualificated = dest.userid_qualificator AND orig.userid_qualificator = dest.userid_qualificated '\
+	'		INNER JOIN profiles pf1 ON orig.userid_qualificator = pf1.userid '\
+    '        INNER JOIN profiles pf2 ON orig.userid_qualificated = pf2.userid '\
+	' 		WHERE  '\
+	'			( dest.qualification_date IS NULL OR orig.qualification_date < dest.qualification_date ) '\
+    '			( :id IS NULL OR ((pf1.userid = :id) OR (pf2.userid = :id)) AND '\
+	'			( :name IS NULL OR ((pf1.username LIKE "%:name%") OR (pf2.username LIKE "%:name%"))) AND '\
+	'			( :match == "false" ) OR ( orig.qualification_date IS NOT NULL AND dest.qualification_date IS NOT NULL AND orig.blocked = "false" AND dest.blocked = "false") '\
+	'			( :superlike == "false" ) OR ( orig.qualification = "superlike" OR dest.qualification = "superlike") '\
+    '     ORDER BY is_match DESC, dest.qualification_date DESC, orig.qualification_date DESC'
+    
+    results=await client_db.fetch_all(query = sql_query, values = {"id":id, "superlike": is_superlike, "match": is_match, "name": name })
     for result in results:
 	    print(tuple(result.values()))
 
@@ -193,7 +222,7 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         "id": id,
         "last_like_date": myprofile["last_like_date"],
         "like_counter": myprofile["like_counter"],
-        "superlike_counter": myprofile["superlike_counter"]
+        "superlike_counter": myprofile["superlike_counter"],
     }
 
     if (not myprofile['is_match_plus']):
@@ -243,7 +272,8 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         userid_qualificator = match.userid_qualificator,
         userid_qualificated = match.userid_qualificated,
         qualification = match.qualification,
-        blocked = False
+        blocked = False,
+        qualification_date = datetime.now(),
     )
 
     await client_db.execute(new_match)
@@ -321,3 +351,15 @@ async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(c
         "blocker": userid_bloquer,
         "blocked": userid_blocked
     })
+
+@router.get("/match/swipes",response_model=List[SwipesOut],summary="Retorna una lista con todos los matchs")
+async def get_match_swipes(    
+    swiper_id: Union[str, None] = None,
+    swiper_name: Union[str,None] = None,
+    superlikes: Union[bool, None] = None,
+    matchs: Union[bool, None] = None,
+    likes: Union[bool, None] = None,
+    blocked: Union[bool, None] = None,
+    client_db = Depends(client.get_db)
+    ):
+    return await get_swipes_list(swiper_id, swiper_name, superlikes, matchs, likes, blocked, client_db)

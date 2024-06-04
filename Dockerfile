@@ -6,6 +6,7 @@ WORKDIR /
 # Copies folders into workdir
 COPY data/ data/
 COPY routers/ routers/
+COPY endpoints/ endpoints/
 
 # Copies files into workdir
 COPY .env /

@@ -1,5 +1,6 @@
 .env
 .venv
+.coverage
 dev.env
 *.pyc
 *.log

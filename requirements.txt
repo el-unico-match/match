@@ -1,8 +1,14 @@
+aiosqlite
 bson
 fastapi
+coveralls
 pydantic_settings 
 databases[asyncpg]
 psycopg2-binary
+pytest
+pytest-cov
+pytest-asyncio
+sqlalchemy
 routers 
 typing
 uvicorn

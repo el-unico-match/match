@@ -11,7 +11,9 @@
 > * Consulta de todos los matchs correspondientes a un usuario
 > * Consulta de todos los swipes mediante filtro
 > * Consulta de perfil que coincida con el filtro (cambio de endpoint) 
-> * Consulta de perfil que coincida con el filtro (cambio de endpoint) 
+> * Consulta de perfil que coincida con el filtro (cambio de endpoint)
+> * Agrega la fecha en que se registra un match en la base de datos
+> * Incorpora cobertura de código mediante Coveralls
 >
 > __Cobertura de código__
 > * [![Coverage Status](https://coveralls.io/repos/github/el-unico-match/match/badge.svg?branch=dev)](https://coveralls.io/github/el-unico-match/match?branch=dev)

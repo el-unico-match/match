@@ -1,11 +1,14 @@
 from fastapi import FastAPI
 from routers import match_db
-	
-#settings=Settings()	
 
 summary="Microservicio que se encarga de todo lo relativo a match"
 
-app=FastAPI(title="match",version="0.0.7",summary=summary)
+app=FastAPI(
+    title="match",
+    version="0.0.9",
+    summary=summary,
+    docs_url='/api-docs'
+)
 
 # Para iniciar el server hacer: uvicorn main:app --reload
 

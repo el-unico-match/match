@@ -1,16 +1,14 @@
-from settings import Settings
+from settings import settings
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData, Table, Column
 from sqlalchemy import Integer, String, Boolean, Float, DateTime
 import databases
 
-settings=Settings()	
+print(settings.database_url)
 
-DATABASE_URL = f"postgresql://{settings.db_credentials}@{settings.db_domain}:{settings.db_port}/{settings.db_name}"
+database = databases.Database(settings.database_url)
 
-database = databases.Database(DATABASE_URL)
-
-engine = create_engine(DATABASE_URL)
+engine = create_engine(settings.database_url)
 
 metadata = MetaData()
 
@@ -56,6 +54,7 @@ matchs = Table(
     Column("userid_qualificator", String),
     Column("userid_qualificated", String),
     Column("qualification", String),
+    Column("qualification_date", DateTime),
     Column("last_message_date", DateTime),
     Column("blocked", Boolean)
 )

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 
 # Entidades para definir los matchs
 class MatchIn(BaseModel):
@@ -11,6 +11,7 @@ class UserOutModel(BaseModel):
    userid: str
    username: str
    qualification: str
+   qualification_date: str
 
 class MatchOut(BaseModel):
    myself: UserOutModel
@@ -21,3 +22,16 @@ class Match(BaseModel):
    userid_qualificator: str
    userid_qualificated: str
    qualification:str
+
+class SwipesOut(BaseModel):
+   is_match: bool
+   qualificator_id: str
+   qualificator_name: str
+   qualificator_swipe: str
+   qualificator_date: str
+   qualificator_blocked: bool
+   qualificated_id: str
+   qualificated_name: str
+   qualificated_swipe: str 
+   qualificated_date: str
+   qualificated_blocked: bool

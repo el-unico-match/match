@@ -1,4 +1,5 @@
 # match
+[![Coverage Status](https://coveralls.io/repos/github/el-unico-match/match/badge.svg?branch=dev)](https://coveralls.io/github/el-unico-match/match?branch=dev)
 
 > __versión actual:__\
 > 0.0.7

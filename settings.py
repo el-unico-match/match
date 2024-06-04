@@ -21,8 +21,16 @@ class Settings(BaseSettings):
     remote_db_name:str='remote'	
     db_name:str=local_db_name
     db_credentials:str=''
+    database_url:str=''
 	
     LIKE_LIMITS:int=2
     SUPERLIKE_LIMITS:int=4
 
     model_config = SettingsConfigDict(env_file=("dev.env",".env"))	
+
+def loadSettings():
+     settings=Settings()
+     settings.database_url=f"postgresql://{settings.db_credentials}@{settings.db_domain}:{settings.db_port}/{settings.db_name}"
+     return settings
+
+settings=loadSettings()

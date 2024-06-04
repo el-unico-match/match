@@ -1,5 +1,6 @@
 from data.match import SwipesOut
 from typing import Union
+import pdb
 
 def swipe_likes_schema(result)-> dict:
     schema= {
@@ -49,12 +50,8 @@ async def get_swipes_list(
         ' 	dest.qualification swipe_2, '\
         '	dest.qualification_date date_2, '\
         '	dest.blocked blocker_2, '\
-        '	CASE WHEN '\
-        '		orig.qualification_date IS NOT NULL AND '\
-        '		orig.blocked = \'false\' AND'\
-        '		dest.qualification_date IS NOT NULL AND '\
-        '		dest.blocked = \'false\' '\
-        '	THEN \'true\' ELSE \'false\' END AS is_match '\
+        '	CASE WHEN orig.qualification_date IS NOT NULL AND dest.qualification_date IS NOT NULL '\
+        '	    THEN \'true\' ELSE \'false\' END AS is_match '\
         '   FROM matchs orig  '\
         '        LEFT JOIN matchs AS dest ON orig.userid_qualificated = dest.userid_qualificator AND orig.userid_qualificator = dest.userid_qualificated '\
         '		 INNER JOIN profiles AS pf1 ON pf1.userid = orig.userid_qualificator '\

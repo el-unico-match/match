@@ -3,13 +3,11 @@ from data.match import Match,MatchIn,MatchOut, SwipesOut
 from data.profile import Profile
 from typing import List,Union
 from endpoints.getSwipes import get_swipes_list
-from settings import Settings
+from settings import settings
 from datetime import datetime
 import data.client as client
 import logging
 import math
-
-settings=Settings()
 
 logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)  

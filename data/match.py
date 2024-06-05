@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional, Union
 
@@ -11,7 +12,7 @@ class UserOutModel(BaseModel):
    userid: str
    username: str
    qualification: str
-   qualification_date: str
+   qualification_date: datetime
 
 class MatchOut(BaseModel):
    myself: UserOutModel

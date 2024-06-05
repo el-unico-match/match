@@ -35,7 +35,8 @@ async def get_swipes_list(
     client_db: any):
 
     values = { 
-        # "superlike": superlikes,
+        "like": 'like',
+        "superlike": 'superlike',
     }
 
     query = \
@@ -51,6 +52,8 @@ async def get_swipes_list(
         '	dest.qualification_date date_2, '\
         '	dest.blocked blocker_2, '\
         '	CASE WHEN orig.qualification_date IS NOT NULL AND dest.qualification_date IS NOT NULL '\
+        '        AND (orig.qualification = :like OR orig.qualification = :superlike) '\
+        '        AND (dest.qualification = :like OR dest.qualification = :superlike) '\
         '	    THEN \'true\' ELSE \'false\' END AS is_match '\
         '   FROM matchs orig  '\
         '        LEFT JOIN matchs AS dest ON orig.userid_qualificated = dest.userid_qualificator AND orig.userid_qualificator = dest.userid_qualificated '\

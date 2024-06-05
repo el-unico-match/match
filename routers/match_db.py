@@ -42,11 +42,13 @@ def match_schema(match)-> dict:
             "userid":match["userid_1"],
             "username":match["username_1"],
             "qualification":match["qualification_1"],
+            "qualification_date":match["qualification_date_1"],
         },
         "matched": {
             "userid":match["userid_2"],
             "username":match["username_2"],
-            "qualification":match["qualification_2"]
+            "qualification": match["qualification_2"],
+            "qualification_date": match["qualification_date_2"],
         }
     }
     return schema
@@ -70,9 +72,10 @@ async def view_status():
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
     logger.error("retornando lista de matchs")
 
-    sql_query2 = \
+    sql_query = \
         ' Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,'\
         '        orig.qualification qualification_1, dest.qualification qualification_2,'\
+        '        orig.qualification_date qualification_date_1, dest.qualification_date qualification_date_2, '\
         '        pf1.username username_1, pf2.username username_2'\
         ' from matchs orig'\
         '    inner join profiles pf1 on orig.userid_qualificator = pf1.userid'\
@@ -84,39 +87,9 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
         '   and not orig.blocked and not dest.blocked'\
         ' order by orig.last_message_date desc'
     
-    sql_query = \
-    ' SELECT '\
-	'	pf1.username name_1, '\
-	' 	orig.userid_qualificator id_1, '\
-    '    orig.qualification qualification_1, '\
-	'	orig.qualification_date date_1, '\
-    '		orig.blocked blocker_1, '\
-	'	pf2.username name_2, '\
-	'	orig.userid_qualificated id_2, '\
-	' 	dest.qualification qualification_2, '\
-	'	dest.qualification_date date_2, '\
-	'	dest.blocked blocker_2, '\
-	'	CASE WHEN '\
-	'		orig.qualification_date IS NOT NULL AND '\
-	'		orig.blocked = "false" AND'\
-	'		dest.qualification_date IS NOT NULL AND '\
-	'		dest.blocked = "false" '\
-	'	THEN "true" ELSE "false" END AS is_match '\
-    '     FROM matchs orig  '\
-    '        LEFT JOIN matchs dest ON orig.userid_qualificated = dest.userid_qualificator AND orig.userid_qualificator = dest.userid_qualificated '\
-	'		INNER JOIN profiles pf1 ON orig.userid_qualificator = pf1.userid '\
-    '        INNER JOIN profiles pf2 ON orig.userid_qualificated = pf2.userid '\
-	' 		WHERE  '\
-	'			( dest.qualification_date IS NULL OR orig.qualification_date < dest.qualification_date ) '\
-    '			( :id IS NULL OR ((pf1.userid = :id) OR (pf2.userid = :id)) AND '\
-	'			( :name IS NULL OR ((pf1.username LIKE "%:name%") OR (pf2.username LIKE "%:name%"))) AND '\
-	'			( :match == "false" ) OR ( orig.qualification_date IS NOT NULL AND dest.qualification_date IS NOT NULL AND orig.blocked = "false" AND dest.blocked = "false") '\
-	'			( :superlike == "false" ) OR ( orig.qualification = "superlike" OR dest.qualification = "superlike") '\
-    '     ORDER BY is_match DESC, dest.qualification_date DESC, orig.qualification_date DESC'
-    
-    results=await client_db.fetch_all(query = sql_query, values = {"id":id, "superlike": is_superlike, "match": is_match, "name": name })
+    results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
     for result in results:
-	    print(tuple(result.values()))
+        print(tuple(result.values()))
 
     return matchs_schema(results) 
 	

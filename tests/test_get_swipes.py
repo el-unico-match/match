@@ -96,6 +96,8 @@ async def test_get_empty_list():
         None,
         None,
         None,
+        None,
+        None,
         memoryDatabase()
     )
 
@@ -110,11 +112,13 @@ async def test_get_list():
 
     swipes = await get_swipes_list(
         swiper_id="id1",
-        swiper_name=None,
-        superlikes=False,
-        matchs=False,
-        likes=False,
-        blocked=False,
+        swiper_names=None,
+        superlikes=None,
+        matchs=None,
+        pending=None,
+        likes=None,
+        dislikes=None,
+        blocked=None,
         client_db=database
     )
 
@@ -143,11 +147,13 @@ async def test_get_inexistent_match():
 
     swipes = await get_swipes_list(
         swiper_id=None,
-        swiper_name=None,
-        superlikes=False,
+        swiper_names=None,
+        superlikes=None,
         matchs=True,
-        likes=False,
-        blocked=False,
+        pending=None,
+        likes=None,
+        dislikes=None,
+        blocked=None,
         client_db=database
     )
 
@@ -166,10 +172,12 @@ async def test_get_superlike():
 
     swipes = await get_swipes_list(
         swiper_id=None,
-        swiper_name=None,
+        swiper_names=None,
         superlikes=True,
         matchs=None,
+        pending=None,
         likes=None,
+        dislikes=None,
         blocked=None,
         client_db=database
     )
@@ -192,9 +200,11 @@ async def test_get_match():
 
     swipes = await get_swipes_list(
         swiper_id=None,
-        swiper_name=None,
+        swiper_names=None,
         superlikes=None,
         matchs=True,
+        pending=None,
+        dislikes=None,
         likes=None,
         blocked=None,
         client_db=database
@@ -229,9 +239,11 @@ async def test_get_superlike():
 
     swipes = await get_swipes_list(
         swiper_id=None,
-        swiper_name=None,
+        swiper_names=None,
         superlikes=True,
         matchs=None,
+        pending=None,
+        dislikes=None,
         likes=None,
         blocked=True,
         client_db=database
@@ -258,10 +270,12 @@ async def test_get_likes():
 
     swipes = await get_swipes_list(
         swiper_id=None,
-        swiper_name=None,
+        swiper_names=None,
         superlikes=True,
+        pending=None,
+        dislikes=None,
         matchs=None,
-        likes=True,
+        likes=None,
         blocked=False,
         client_db=database
     )
@@ -272,7 +286,7 @@ async def test_get_likes():
     assert element1.qualificator_swipe == 'superlike'
 
 @pytest.mark.asyncio
-async def test_get_by_swiper_name():
+async def test_get_by_swiper_names():
 
     database = memoryDatabase()
     database.insertProfile(user1)
@@ -285,10 +299,12 @@ async def test_get_by_swiper_name():
 
     swipes = await get_swipes_list(
         swiper_id=None,
-        swiper_name="name3",
+        swiper_names="name3",
         superlikes=True,
         matchs=None,
-        likes=True,
+        pending=None,
+        likes=None,
+        dislikes=None,
         blocked=False,
         client_db=database
     )

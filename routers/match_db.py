@@ -180,12 +180,12 @@ async def filter(
             dist = rad*rad*(xdist*xdist + ydist*ydist + zdist*zdist)
             if (dist < distance * distance):
                 return profile_schema(row)
-        raise HTTPException(status_code=200,detail="No se han encontrado perfiles para esta consulta")
+        raise Response(status_code=204,detail="No se han encontrado perfiles para esta consulta")
     
     if (results):
         return profile_schema(results[0])
     #TODO: revisar porque falla el return de los datos obtenidos por la query
-    raise HTTPException(status_code=200,detail="No se han encontrado perfiles para esta consulta")
+    raise Response(status_code=204,detail="No se han encontrado perfiles para esta consulta")
 
 #match/swipe
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")

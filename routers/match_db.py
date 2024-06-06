@@ -72,20 +72,22 @@ async def view_status():
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
     logger.error("retornando lista de matchs")
 
-    sql_query = \
-        ' Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,'\
-        '        orig.qualification qualification_1, dest.qualification qualification_2,'\
-        '        orig.qualification_date qualification_date_1, dest.qualification_date qualification_date_2, '\
-        '        pf1.username username_1, pf2.username username_2'\
-        ' from matchs orig'\
-        '    inner join profiles pf1 on orig.userid_qualificator = pf1.userid'\
-        '    inner join matchs dest on orig.userid_qualificated = dest.userid_qualificator and orig.userid_qualificator = dest.userid_qualificated'\
-        '    inner join profiles pf2 on orig.userid_qualificated = pf2.userid'\
-        ' where orig.qualification = :like'\
-        '   and dest.qualification = :like'\
-        '   and orig.userid_qualificator = :id'\
-        '   and not orig.blocked and not dest.blocked'\
-        ' order by orig.last_message_date desc'
+    sql_query = '''
+        Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,
+               orig.qualification qualification_1, dest.qualification qualification_2,
+               orig.qualification_date qualification_date_1, dest.qualification_date qualification_date_2,
+               pf1.username username_1, pf2.username username_2
+        from matchs orig
+           inner join profiles pf1 on orig.userid_qualificator = pf1.userid
+           inner join matchs dest on orig.userid_qualificated = dest.userid_qualificator 
+                                 and orig.userid_qualificator = dest.userid_qualificated
+           inner join profiles pf2 on orig.userid_qualificated = pf2.userid
+        where orig.qualification = :like
+          and dest.qualification = :like
+          and orig.userid_qualificator = :id
+          and not orig.blocked and not dest.blocked
+        order by orig.last_message_date desc
+    '''
     
     results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
     for result in results:
@@ -112,15 +114,16 @@ async def filter(
         raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
     
     arguments = { 'id': id, "superlike":"superlike" }
-    sql_query = \
-        'Select pf.* '\
-        'from profiles pf '\
-        '   left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated '\
-        '   left join matchs m2 on '\
-        '                    m2.userid_qualificated = :id '\
-        '                    and pf.userid = m2.userid_qualificator '\
-        '                    and m2.qualification = :superlike '\
-        'where pf.userid <> :id and m.id is null '
+    sql_query = '''
+        Select pf.*
+        from profiles pf
+           left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated
+           left join matchs m2 on
+                            m2.userid_qualificated = :id
+                            and pf.userid = m2.userid_qualificator
+                            and m2.qualification = :superlike
+        where pf.userid <> :id and m.id is null
+    '''
         
     if (gender != None):
         sql_query += ' and pf.gender = :gender'
@@ -142,7 +145,7 @@ async def filter(
         sql_query += ' and pf.ethnicity = :ethnicity'
         arguments["ethnicity"] = ethnicity
 
-    sql_query += ' order by m2.userid_qualificator desc, pf.is_match_plus desc, pf.userid '
+    sql_query += ' order by m2.userid_qualificator desc, pf.is_match_plus desc, pf.userid'
 	
     results = await client_db.fetch_all(query = sql_query, values = arguments)
 
@@ -229,13 +232,13 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             newvalues['last_like_date'] = datetime.now()
             newvalues['superlike_counter'] += 1
 
-    query = """
+    query = '''
         update profiles 
         set last_like_date = :last_like_date,
             superlike_counter = :superlike_counter,
             like_counter = :like_counter
         where userid = :id
-    """
+    '''
 
     await client_db.execute(query = query, values = newvalues)
 
@@ -327,13 +330,12 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
     
 @router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
 async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
-    sql_query = \
-    sql_query = \
-        ' update matchs '\
-        ' set last_message_date = NOW() '\
-        ' where matchs.userid_qualificator = :sender and matchs.userid_qualificated = :reciever or '\
-        '       matchs.userid_qualificator = :reciever and matchs.userid_qualificated = :sender '
-
+    sql_query = '''
+        update matchs 
+        set last_message_date = NOW() 
+        where matchs.userid_qualificator = :sender and matchs.userid_qualificated = :reciever or 
+              matchs.userid_qualificator = :reciever and matchs.userid_qualificated = :sender
+    '''
     await client_db.execute(query = sql_query, values = { 
         "sender": userid_sender,
         "reciever": userid_reciever
@@ -341,11 +343,11 @@ async def notification(userid_sender:str,userid_reciever:str,client_db = Depends
 
 @router.post("/user/match/block",summary="Bloquear un usuario", response_class=Response)
 async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(client.get_db))-> None:
-    sql_query = \
-        ' update matchs '\
-        ' set blocked = TRUE '\
-        ' where matchs.userid_qualificator = :blocker and matchs.userid_qualificated = :blocked '
-
+    sql_query = '''
+        update matchs 
+        set blocked = TRUE 
+        where matchs.userid_qualificator = :blocker and matchs.userid_qualificated = :blocked
+    '''
     await client_db.execute(query = sql_query, values = { 
         "blocker": userid_bloquer,
         "blocked": userid_blocked

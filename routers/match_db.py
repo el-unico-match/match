@@ -266,8 +266,6 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
 
     await client_db.execute(new_match)
 
-#@router.post("/user/match/profile",summary="Crea un nuevo perfil", response_class=Response)
-#async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))-> None: 
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_model=Profile)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db)): 
     query = client.profiles.insert().values(userid =new_profile.userid,
@@ -287,7 +285,7 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
     logger.info("creando el perfil en base de datos")	
     try:
         await client_db.execute(query)
-        #query = client.profiles.select().where(profiles.userid = new_profile.userid)
+        
         query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
         result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})	
 
@@ -298,10 +296,6 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
         logger.error(e)
         raise HTTPException(status_code=400,detail="El perfil ya existe")
 
-
-	
-#@router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_class=Response)
-#async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario"))-> None:     
 @router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_model=Profile)
 async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario")):     
     profiles = client.profiles
@@ -322,7 +316,7 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
     logger.info("actualizando el perfil en base de datos")
     try: 	
         await client_db.execute(query)		
-        #query = client.profiles.select().where(profiles.userid = updated_profile.userid)
+        
         query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
         result = await client_db.fetch_one(query = query_2, values={"id": updated_profile.userid})	
 
@@ -332,7 +326,19 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
         print(e)
         logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
-    
+
+@router.get("/user/{id}/match/profile/",summary="Obtiene el perfil solicitado", response_model=Profile)
+async def view_profile(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):     
+    try: 	
+        query = "SELECT * FROM profiles WHERE profiles.userid = :id"
+        result = await client_db.fetch_one(query = query, values={"id": id})
+
+        return profile_schema(result)
+    except Exception as e:
+        print(e)
+        logger.error(e)
+        raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
+
 @router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
 async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
     sql_query = '''

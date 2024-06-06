@@ -67,8 +67,10 @@ async def view_status():
     logger.info("retornando status")
     return {"status":"ok"}
 
-@router.get("/user/{id}/matchs",response_model=List[MatchOut]
-,summary="Retorna una lista con todos los matchs")
+@router.get(
+        "/user/{id}/matchs",
+        response_model=List[MatchOut],
+        summary="Retorna una lista con todos los matchs")
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
     logger.error("retornando lista de matchs")
 
@@ -90,8 +92,9 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
     '''
     
     results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
-    for result in results:
-        print(tuple(result.values()))
+    
+    #for result in results:
+    #    print(tuple(result.values()))
 
     return matchs_schema(results) 
 	

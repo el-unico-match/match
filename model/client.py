@@ -33,19 +33,17 @@ profiles = Table(
     Column("superlike_counter", Integer)
 )
 
-
-# filters = Table(
-#     "filters",
-#     metadata,
-#     Column("userid", String, primary_key=True),
-#     Column("gender", String),
-#     Column("age_from", Integer),
-#     Column("age_to", Integer),
-#     Column("education", String),
-#     Column("ethnicity", String),
-#     Column("latitud",Integer),
-#     Column("longitud",Integer)
-# )
+filters = Table(
+    "filters",
+    metadata,
+    Column("userid", String, primary_key=True),
+    Column("gender", String),
+    Column("age_from", Integer),
+    Column("age_to", Integer),
+    Column("education", String),
+    Column("ethnicity", String),
+    Column("distance",Float)
+)
 
 matchs = Table(
     "matchs",

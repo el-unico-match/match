@@ -1,0 +1,137 @@
+"profiles":[
+{
+  "userid": "1",
+  "username": "Margot Robbie",
+  "gender": "Mujer",
+  "looking_for": "Hombre",
+  "age": 33,
+  "education": "Secundaria",
+  "ethnicity": "Blanca",
+  "is_match_plus": false,
+  "latitud": 0,
+  "longitud": 0,
+  "like_counter": 0,
+  "superlike_counter": 0
+}
+,
+{
+  "userid": "2",
+  "username": "Angelina Jolie",
+  "gender": "Mujer",
+  "looking_for": "Hombre",
+  "age": 48,
+  "education": "Universitaria",
+  "ethnicity": "Blanca",
+  "is_match_plus": false,
+  "latitud": 0,
+  "longitud": 0,
+  "like_counter": 0,
+  "superlike_counter": 0
+}
+,
+{
+  "userid": "3",
+  "username": "Ryan Gosling",
+  "gender": "Hombre",
+  "looking_for": "Mujer",
+  "age": 44,
+  "education": "Secundaria",
+  "ethnicity": "Blanca",
+  "is_match_plus": false,
+  "latitud": 0,
+  "longitud": 0,
+  "like_counter": 0,
+  "superlike_counter": 0
+}
+,
+{
+  "userid": "4",
+  "username": "Jennifer Aniston",
+  "gender": "Mujer",
+  "looking_for": "Hombre",
+  "age": 55,
+  "education": "Secundaria",
+  "ethnicity": "Blanca",
+  "is_match_plus": false,
+  "latitud": 0,
+  "longitud": 0,
+  "like_counter": 0,
+  "superlike_counter": 0
+}
+,
+{
+  "userid": "5",
+  "username": "Scarlett Johansson",
+  "gender": "Mujer",
+  "looking_for": "Hombre",
+  "age": 39,
+  "education": "Secundaria",
+  "ethnicity": "Blanca",
+  "is_match_plus": false,
+  "latitud": 0,
+  "longitud": 0,
+  "like_counter": 0,
+  "superlike_counter": 0
+}
+,
+{
+  "userid": "6",
+  "username": "Anya Taylor-Joy",
+  "gender": "Mujer",
+  "looking_for": "Hombre",
+  "age": 28,
+  "education": "Secundaria",
+  "ethnicity": "Blanca",
+  "is_match_plus": false,
+  "latitud": 0,
+  "longitud": 0,
+  "like_counter": 0,
+  "superlike_counter": 0
+}
+,
+{
+  "userid": "7",
+  "username": "Halle Berry",
+  "gender": "Mujer",
+  "looking_for": "Hombre",
+  "age": 57,
+  "education": "Secundaria",
+  "ethnicity": "Negra",
+  "is_match_plus": false,
+  "latitud": 0,
+  "longitud": 0,
+  "like_counter": 0,
+  "superlike_counter": 0
+}
+,
+{
+  "userid": "8",
+  "username": "Jackie Chan",
+  "gender": "Hombre",
+  "looking_for": "Mujer",
+  "age": 70,
+  "education": "Secundaria",
+  "ethnicity": "Asiatica",
+  "is_match_plus": false,
+  "latitud": 0,
+  "longitud": 0,
+  "like_counter": 0,
+  "superlike_counter": 0
+}
+,
+{
+  "userid": "9",
+  "username": "Will Smith",
+  "gender": "Hombre",
+  "looking_for": "Mujer",
+  "age": 55,
+  "education": "Secundaria",
+  "ethnicity": "Negra",
+  "is_match_plus": false,
+  "latitud": 0,
+  "longitud": 0,
+  "like_counter": 0,
+  "superlike_counter": 0
+}
+
+]

@@ -81,6 +81,8 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
     logger.error("retornando lista de matchs")
     matchdata = MatchData(client_db)
 
+    results = await matchdata.get_matches(id)
+
     return matchs_schema(results) 
 	
 @router.get("/user/{id}/profiles/set_filter", response_model=Profile,summary="Actualiza el filtro de candidator para el usuario.")

@@ -27,6 +27,7 @@ def swipe_result(results)-> list:
 	
 async def get_swipes_list(
     swiper_id: Union[str, None],
+    swiped_id: Union[str, None],
     swiper_names: Union[str,None],
     superlikes: Union[bool, None],
     matchs: Union[bool, None],
@@ -64,11 +65,15 @@ async def get_swipes_list(
          		WHERE ( dest.qualification_date IS NULL OR orig.qualification_date < dest.qualification_date )
     '''
     
-    if (swiper_id is not None):
-        query += 'AND ((pf1.userid = :id) OR (pf2.userid = :id)) '
-        values['id'] = swiper_id
+    if (swiper_id is not None and swiper_id != ''):
+        query += 'AND (pf1.userid = :swiper_id) '
+        values['swiper_id'] = swiper_id
 
-    if (swiper_names is not None):
+    if (swiped_id is not None and swiped_id != ''):
+        query += 'AND (pf2.userid = :swiped_id) '
+        values['swiped_id'] = swiped_id
+
+    if (swiper_names is not None and swiper_names != ''):
         names = swiper_names.split(" ")
         data1 = [f"LOWER(pf1.username) LIKE '%{name.strip().lower()}%'" for name in names]
         pf1_like_conditions = data1[0] if len(data1) == 1 else ' AND '.join(data1)

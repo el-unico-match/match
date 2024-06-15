@@ -1,5 +1,5 @@
 from sqlalchemy import inspect, text
-from data.client import engine, matchs, profiles
+from model.client import engine, matchs, profiles
 
 class memoryDatabase:
 

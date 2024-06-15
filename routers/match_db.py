@@ -1,7 +1,6 @@
 from fastapi import APIRouter,Path,Depends,Response,HTTPException
 from data.match import Match,MatchIn,MatchOut, SwipesOut
-from data.profile import Profile, Filter
-from business.filter_data import FilterData
+from data.profile import Profile
 from typing import List,Union
 from endpoints.getSwipes import get_swipes_list
 from settings import settings
@@ -281,9 +280,6 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
         query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
         result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})	
 
-        filterdata = FilterData(client_db)
-        filterdata.new(new_profile.userid)
-
         print(tuple(result.values()))    
         return profile_schema(result)
     except Exception as e:
@@ -374,12 +370,3 @@ async def get_match_swipes(
     ):
     return await get_swipes_list(swiper_id, swiped_id, swiper_names, superlikes, matchs, pending, likes, dislikes, blocked, client_db)
 
-@router.get("/user/{id}/profiles/set_filter", response_model=Profile,summary="Actualiza el filtro de candidator para el usuario.")
-async def set_filter(filter: Filter, client_db = Depends(client.get_db)):
-    filterdata = FilterData(client_db)
-    await filterdata.update(filter)
-
-@router.get("/user/{id}/profiles/set_filter", response_model=Profile,summary="Actualiza el filtro de candidator para el usuario.")
-async def get_filter(id: str, client_db = Depends(client.get_db)):
-    filterdata = FilterData(client_db)
-    await filterdata.get_by_id(id)

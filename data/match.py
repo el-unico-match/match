@@ -39,9 +39,9 @@ class SwipesOut(BaseModel):
 
 class MatchFilter(BaseModel):
    userid: str
-   gender: Optional[str]
-   age_from: Optional[int]
-   age_to: Optional[int]
-   education: Optional[str]
-   ethnicity: Optional[str]
-   distance: Optional[float]
+   gender: Optional[str] = None
+   age_from: Optional[int] = None
+   age_to: Optional[int] = None
+   education: Optional[str] = None
+   ethnicity: Optional[str] = None
+   distance: Optional[float] = None

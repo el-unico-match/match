@@ -388,3 +388,27 @@ async def view_filter(id: str = Path(..., description="El id del usuario"), clie
     result = await client_db.fetch_one(query = query, values={"id": id})
 
     return filter_schema(result)
+
+@router.put("/user/{id}/match/filter/",summary="Obtiene el filtro solicitado", response_model=Response)
+async def update_filter(filter: MatchFilter = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):
+    filters = client.filters
+    query = filters.update().where(filters.columns.userid == filter.userid).values(
+        gender            = filter.gender,
+        age_from          = filter.age_from,
+        age_to            = filter.age_to,
+        education         = filter.education,
+        ethnicity         = filter.ethnicity,
+        distance          = filter.distance
+    )
+
+    logger.info("actualizando el filtro en base de datos")
+    try: 	
+        await client_db.execute(query)
+
+        query = "SELECT * FROM filters WHERE filters.userid = :id"
+        result = await client_db.fetch_one(query = query, values={"id": filter.userid})
+
+        return filter_schema(result)
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=400,detail="El perfil ya existe")    

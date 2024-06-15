@@ -59,6 +59,18 @@ def matchs_schema(matchs)-> list:
        list.append(MatchOut(**match_schema(match)))
    return list	
 	
+def filter_schema(filter)-> dict:
+    schema = {
+        "userid": filter["userid"],
+        "gender": filter["gender"],
+        "age_from": filter["age_from"],
+        "age_to": filter["age_to"],
+        "education": filter["education"],
+        "ethnicity": filter["ethnicity"],
+        "distance": filter["distance"]
+    }
+    return schema
+
 router=APIRouter(tags=["match"])
 
 # Operaciones de la API
@@ -370,9 +382,9 @@ async def get_match_swipes(
     ):
     return await get_swipes_list(swiper_id, swiped_id, swiper_names, superlikes, matchs, pending, likes, dislikes, blocked, client_db)
 
-@router.get("/user/{id}/match/filter/",summary="Obtiene el filtro solicitado", response_model=Profile)
+@router.get("/user/{id}/match/filter/",summary="Obtiene el filtro solicitado", response_model=MatchFilter)
 async def view_filter(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):
     query = "SELECT * FROM filters WHERE filters.userid = :id"
     result = await client_db.fetch_one(query = query, values={"id": id})
 
-    return profile_schema(result)
+    return filter_schema(result)

@@ -58,19 +58,7 @@ def matchs_schema(matchs)-> list:
    for match in matchs:
        list.append(MatchOut(**match_schema(match)))
    return list	
-
-def filter_schema(filter) -> dict:
-    schema = {
-        "userid": filter["userid"],
-        "gender": filter["gender"],
-        "age_from": filter["age_from"],
-        "age_to": filter["age_to"],
-        "education": filter["education"],
-        "ethnicity": filter["ethnicity"],
-        "distance": filter["distance"],
-    }
-    return schema
-
+	
 router=APIRouter(tags=["match"])
 
 # Operaciones de la API
@@ -292,8 +280,8 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
         query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
         result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})	
 
-        #filterdata = FilterData(client_db)
-        #filterdata.new(new_profile.userid)
+        filterdata = FilterData(client_db)
+        filterdata.new(new_profile.userid)
 
         print(tuple(result.values()))    
         return profile_schema(result)
@@ -385,7 +373,7 @@ async def get_match_swipes(
     ):
     return await get_swipes_list(swiper_id, swiped_id, swiper_names, superlikes, matchs, pending, likes, dislikes, blocked, client_db)
 
-@router.post("/user/{id}/filter", response_model=Response,summary="Actualiza el filtro de candidator para el usuario.")
+@router.post("/user/{id}/profiles/set_filter", response_model=Response,summary="Actualiza el filtro de candidator para el usuario.")
 async def set_filter(filter: Filter, client_db = Depends(client.get_db)):
     filters = client.filters
     instruction = filters.update().where(
@@ -405,14 +393,11 @@ async def set_filter(filter: Filter, client_db = Depends(client.get_db)):
     #filterdata = FilterData(client_db)
     #await filterdata.update(filter)
 
-@router.get("/user/{id}/filter", response_model=Filter,summary="Actualiza el filtro de candidator para el usuario.")
+@router.get("/user/{id}/profiles/get_filter", response_model=Filter,summary="Actualiza el filtro de candidator para el usuario.")
 async def get_filter(id: str, client_db = Depends(client.get_db)):
-    values = await client_db.fetch_one(
+    return await client_db.fetch_one(
         query = "SELECT * FROM filters WHERE filters.userid = :id", 
         values={"id": id}
     )
-    
-    return filter_schema(values)
-    
     #filterdata = FilterData(client_db)
     #await filterdata.get_by_id(id)

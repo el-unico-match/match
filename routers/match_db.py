@@ -420,11 +420,10 @@ async def next_candidate(id:str = Path(..., description="El id del usuario"), cl
     if not myprofile:
         raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
 
-    query = "SELECT * FROM filters WHERE filters.userid = :id"
+    query = "SELECT * FROM filters WHERE userid = :id"
     myfilter = await client_db.fetch_one(query = query, values={"id": id})
     if not myfilter:
-        raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id")    
-    myfilter = filter_schema(myfilter)
+        raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id")
     
     arguments = { 'id': id, "superlike":"superlike" }
     sql_query = '''
@@ -438,25 +437,25 @@ async def next_candidate(id:str = Path(..., description="El id del usuario"), cl
         where pf.userid <> :id and m.id is null
     '''
         
-    if (myfilter.gender != None):
+    if (myfilter["gender"] != None):
         sql_query += ' and pf.gender = :gender'
-        arguments["gender"] = myfilter.gender
+        arguments["gender"] = myfilter["gender"]
     
-    if (myfilter.age_from != None):
+    if (myfilter["age_from"] != None):
         sql_query += ' and pf.age >= :age_from'
-        arguments["age_from"] = myfilter.age_from
+        arguments["age_from"] = myfilter["age_from"]
     
-    if (myfilter.age_to != None):
+    if (myfilter["age_to"] != None):
         sql_query += ' and pf.age <= :age_to'
-        arguments["age_to"] = myfilter.age_to
+        arguments["age_to"] = myfilter["age_to"]
     
-    if (myfilter.education != None):
+    if (myfilter["education"] != None):
         sql_query += ' and pf.education = :education'
-        arguments["education"] = myfilter.education
+        arguments["education"] = myfilter["education"]
     
-    if (myfilter.ethnicity != None):
+    if (myfilter["ethnicity"] != None):
         sql_query += ' and pf.ethnicity = :ethnicity'
-        arguments["ethnicity"] = myfilter.ethnicity
+        arguments["ethnicity"] = myfilter["ethnicity"]
 
     sql_query += ' order by m2.userid_qualificator desc, pf.is_match_plus desc, pf.userid'
 	
@@ -491,7 +490,7 @@ async def next_candidate(id:str = Path(..., description="El id del usuario"), cl
 
             # Distance squared
             dist = rad*rad*(xdist*xdist + ydist*ydist + zdist*zdist)
-            if (dist < myfilter.distance * myfilter.distance):
+            if (dist < myfilter["distance"] * myfilter["distance"]):
                 return profile_schema(row)
         return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
     

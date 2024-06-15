@@ -1,5 +1,5 @@
 from fastapi import APIRouter,Path,Depends,Response,HTTPException
-from data.match import Match,MatchIn,MatchOut, SwipesOut
+from data.match import Match,MatchIn,MatchOut, SwipesOut, MatchFilter
 from data.profile import Profile
 from typing import List,Union
 from endpoints.getSwipes import get_swipes_list
@@ -370,3 +370,9 @@ async def get_match_swipes(
     ):
     return await get_swipes_list(swiper_id, swiped_id, swiper_names, superlikes, matchs, pending, likes, dislikes, blocked, client_db)
 
+@router.get("/user/{id}/match/filter/",summary="Obtiene el filtro solicitado", response_model=Profile)
+async def view_filter(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):
+    query = "SELECT * FROM filters WHERE filters.userid = :id"
+    result = await client_db.fetch_one(query = query, values={"id": id})
+
+    return profile_schema(result)

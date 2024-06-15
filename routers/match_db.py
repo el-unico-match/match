@@ -129,20 +129,15 @@ async def profiles_filter(
         raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
     
     arguments = { 'id': id, "superlike":"superlike" }
-    # sql_query = '''
-    #     Select pf.*
-    #     from profiles pf
-    #        left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated
-    #        left join matchs m2 on
-    #                         m2.userid_qualificated = :id
-    #                         and pf.userid = m2.userid_qualificator
-    #                         and m2.qualification = :superlike
-    #     where pf.userid <> :id and m.id is null
-    # '''
     sql_query = '''
         Select pf.*
         from profiles pf
-        where pf.userid <> :id
+           left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated
+           left join matchs m2 on
+                            m2.userid_qualificated = :id
+                            and pf.userid = m2.userid_qualificator
+                            and m2.qualification = :superlike
+        where pf.userid <> :id and m.id is null
     '''
         
     if (gender != None):

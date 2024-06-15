@@ -36,3 +36,12 @@ class SwipesOut(BaseModel):
    qualificated_swipe: str 
    qualificated_date: str
    qualificated_blocked: bool
+
+class MatchFilter(BaseModel):
+   userid: str
+   gender: str
+   age_from: int
+   age_to: int
+   education: str
+   ethnicity: str
+   distance: float

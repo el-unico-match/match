@@ -12,24 +12,24 @@ class FilterData:
             values={"id": id}
         )
     
-    async def update(self, values: Filter):
-        filters = client.filters
+    async def update(self, newvalues: Filter):
+        filters = self.client_db.filters
         query = filters.update().where(
-            filters.columns.userid == filter.userid
+            filters.columns.userid == newvalues.userid
         ).values(
-            userid    = filter.userid,
-            gender    = filter.gender,
-            age_from  = filter.age_from,
-            age_to    = filter.age_to,
-            education = filter.education,
-            ethnicity = filter.ethnicity,
-            distance  = filter.distance
+            userid    = newvalues.userid,
+            gender    = newvalues.gender,
+            age_from  = newvalues.age_from,
+            age_to    = newvalues.age_to,
+            education = newvalues.education,
+            ethnicity = newvalues.ethnicity,
+            distance  = newvalues.distance
         )
 
         await self.client_db.execute(query = query)
     
     async def new(self, userid:str):
-        instruction = client.filters.insert().values(
+        instruction = self.client_db.filters.insert().values(
             userid    = userid,
             gender    = None,
             age_from  = None,

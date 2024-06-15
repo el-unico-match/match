@@ -413,20 +413,18 @@ async def update_filter(matchfilter: MatchFilter, client_db = Depends(client.get
         logger.error(e)
         raise HTTPException(status_code=404,detail=str(e))
 
-@router.get("/user/{id}/match/nextcandidate",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
+@router.get("/user/{id}/match/nextcandidate",response_model=Profile,summary="Retorna un perfil que coincida con el gusto del usuario!")
 async def next_candidate(id:str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):
-    logger.error("retornando perfil que coincida con el filtro")
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
+    if not myprofile:
+        raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
 
     query = "SELECT * FROM filters WHERE filters.userid = :id"
     myfilter = await client_db.fetch_one(query = query, values={"id": id})
+    if not myfilter:
+        raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id")    
     myfilter = filter_schema(myfilter)
-
-
-    print(myprofile)
-    if not myprofile:
-        raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
     
     arguments = { 'id': id, "superlike":"superlike" }
     sql_query = '''
@@ -499,5 +497,6 @@ async def next_candidate(id:str = Path(..., description="El id del usuario"), cl
     
     if (results):
         return profile_schema(results[0])
+    
     #TODO: revisar porque falla el return de los datos obtenidos por la query
     return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")

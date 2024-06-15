@@ -17,7 +17,7 @@ class Profile(BaseModel):
    like_counter: int
    superlike_counter: int
 
-class Filter(BaseException):
+class Filter(BaseModel):
    userid: str
    gender: str
    age_from: int

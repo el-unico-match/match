@@ -1,6 +1,7 @@
 from fastapi import APIRouter,Path,Depends,Response,HTTPException
 from data.match import Match,MatchIn,MatchOut, SwipesOut
 from data.profile import Profile, Filter
+from business.filter_data import FilterData
 from typing import List,Union
 from endpoints.getSwipes import get_swipes_list
 from settings import settings
@@ -373,31 +374,12 @@ async def get_match_swipes(
     ):
     return await get_swipes_list(swiper_id, swiped_id, swiper_names, superlikes, matchs, pending, likes, dislikes, blocked, client_db)
 
-@router.post("/user/{id}/profiles/set_filter", response_model=Response,summary="Actualiza el filtro de candidator para el usuario.")
+@router.get("/user/{id}/profiles/set_filter", response_model=Profile,summary="Actualiza el filtro de candidator para el usuario.")
 async def set_filter(filter: Filter, client_db = Depends(client.get_db)):
-    filters = client.filters
-    instruction = filters.update().where(
-        filters.columns.userid == filter.userid
-    ).values(
-        userid    = filter.userid,
-        gender    = filter.gender,
-        age_from  = filter.age_from,
-        age_to    = filter.age_to,
-        education = filter.education,
-        ethnicity = filter.ethnicity,
-        distance  = filter.distance
-    )
+    filterdata = FilterData(client_db)
+    await filterdata.update(filter)
 
-    await client_db.execute(instruction)
-
-    #filterdata = FilterData(client_db)
-    #await filterdata.update(filter)
-
-@router.get("/user/{id}/profiles/get_filter", response_model=Filter,summary="Actualiza el filtro de candidator para el usuario.")
+@router.get("/user/{id}/profiles/set_filter", response_model=Profile,summary="Actualiza el filtro de candidator para el usuario.")
 async def get_filter(id: str, client_db = Depends(client.get_db)):
-    return await client_db.fetch_one(
-        query = "SELECT * FROM filters WHERE filters.userid = :id", 
-        values={"id": id}
-    )
-    #filterdata = FilterData(client_db)
-    #await filterdata.get_by_id(id)
+    filterdata = FilterData(client_db)
+    await filterdata.get_by_id(id)

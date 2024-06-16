@@ -3,6 +3,7 @@ from data.match import Match,MatchIn,MatchOut, SwipesOut, MatchFilter
 from data.profile import Profile
 from typing import List,Union
 from endpoints.getSwipes import get_swipes_list
+from endpoints.putBlock import update_block_state, PutBlockRequest
 from settings import settings
 from datetime import datetime
 import data.client as client
@@ -366,6 +367,10 @@ async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(c
         "blocker": userid_bloquer,
         "blocked": userid_blocked
     })
+
+@router.put("/user/match/block",summary="Cambiar el estado de bloqueo de un match", response_model=SwipesOut)
+async def change_match_block_state(request: PutBlockRequest, client_db = Depends(client.get_db)):
+    return await update_block_state(request, client_db)
 
 @router.get("/match/swipes",response_model=List[SwipesOut],summary="Retorna una lista con todos los matchs")
 async def get_match_swipes(    

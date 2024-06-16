@@ -1,6 +1,5 @@
 from data.match import SwipesOut
 from typing import Union
-import pdb
 
 def swipe_likes_schema(result)-> dict:
     schema= {

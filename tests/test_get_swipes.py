@@ -98,6 +98,7 @@ async def test_get_empty_list():
         None,
         None,
         None,
+        None,
         memoryDatabase()
     )
 
@@ -112,6 +113,7 @@ async def test_get_list():
 
     swipes = await get_swipes_list(
         swiper_id="id1",
+        swiped_id=None,
         swiper_names=None,
         superlikes=None,
         matchs=None,
@@ -147,6 +149,7 @@ async def test_get_inexistent_match():
 
     swipes = await get_swipes_list(
         swiper_id=None,
+        swiped_id=None,
         swiper_names=None,
         superlikes=None,
         matchs=True,
@@ -172,6 +175,7 @@ async def test_get_superlike():
 
     swipes = await get_swipes_list(
         swiper_id=None,
+        swiped_id=None,
         swiper_names=None,
         superlikes=True,
         matchs=None,
@@ -200,6 +204,7 @@ async def test_get_match():
 
     swipes = await get_swipes_list(
         swiper_id=None,
+        swiped_id=None,
         swiper_names=None,
         superlikes=None,
         matchs=True,
@@ -239,6 +244,7 @@ async def test_get_superlike():
 
     swipes = await get_swipes_list(
         swiper_id=None,
+        swiped_id=None,
         swiper_names=None,
         superlikes=True,
         matchs=None,
@@ -270,6 +276,7 @@ async def test_get_likes():
 
     swipes = await get_swipes_list(
         swiper_id=None,
+        swiped_id=None,
         swiper_names=None,
         superlikes=True,
         pending=None,
@@ -299,6 +306,7 @@ async def test_get_by_swiper_names():
 
     swipes = await get_swipes_list(
         swiper_id=None,
+        swiped_id=None,
         swiper_names="name3",
         superlikes=True,
         matchs=None,
@@ -313,3 +321,33 @@ async def test_get_by_swiper_names():
     
     element1 = swipes[0]
     assert element1.qualificator_name == 'name3'
+
+@pytest.mark.asyncio
+async def test_get_swiped():
+
+    database = memoryDatabase()
+    database.insertProfile(user1)
+    database.insertProfile(user2)
+    database.insertProfile(user3)
+
+    database.insertSwipe(user1Like)
+    database.insertSwipe(user2Like)
+    database.insertSwipe(user3Like)
+
+    swipes = await get_swipes_list(
+        swiper_id="id1",
+        swiped_id="id2",
+        swiper_names=None,
+        superlikes=None,
+        matchs=True,
+        pending=None,
+        likes=None,
+        dislikes=None,
+        blocked=False,
+        client_db=database
+    )
+
+    assert len(swipes) == 1
+    
+    element1 = swipes[0]
+    assert element1.qualificated_name == 'name2'

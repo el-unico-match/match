@@ -1,7 +1,7 @@
 # match
 
 > __Versión actual__
-> * 0.0.9
+> * 0.0.10
 > 
 > __Funcionalidades actuales__
 > * Creación de nuevo perfil (retorna el perfil creado)
@@ -14,6 +14,7 @@
 > * Incorpora cobertura de código mediante Coveralls
 > * Notificación de envío de mensaje
 > * Bloqueo de usuario
+> * Cambio de estado del bloqueo por el usuario administrador
 >
 > __Cobertura de código__
 > * [![Coverage Status](https://coveralls.io/repos/github/el-unico-match/match/badge.svg?branch=dev)](https://coveralls.io/github/el-unico-match/match?branch=dev)

@@ -6,8 +6,11 @@ class memoryDatabase:
     def __init__(self):
        self.database = engine.connect()
 
-    async def fetch_all(self, sqlQuery, values):
-        with self.database.execute(text(sqlQuery), values) as proxy:
+    async def execute(self, query, values):
+        self.database.execute(text(query), values)
+
+    async def fetch_all(self, query, values):
+        with self.database.execute(text(query), values) as proxy:
             keys = proxy.keys()
             return [{key: value for key, value in zip(keys, row)} for row in proxy.fetchall()]
         

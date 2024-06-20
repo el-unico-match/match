@@ -10,6 +10,14 @@ import data.client as client
 import logging
 import math
 
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import messaging
+
+server_key = settings.notification_server_key
+firebase_cred = credentials.Certificate(server_key)
+firebase_app = firebase_admin.initialize_app(firebase_cred)
+
 logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)  
 			
@@ -72,6 +80,42 @@ def filter_schema(filter)-> dict:
     }
     return schema
 
+def send_push_notification(topic,title, body, data=None):
+    cred = credentials.Certificate(server_key)
+    firebase_admin.initialize_app(cred)
+
+    message = messaging.Message(
+        notification=messaging.Notification(
+            title=title,
+            body=body
+        ),
+        topic=topic
+    )
+    if data:
+        message.data = data
+
+    response = messaging.send(message)
+
+    logger.info("Se ha enviado exitosamente la notificación:"+response+" para el topic:"+topic)	
+	
+#def send_push_notification(server_key, device_tokens, title, body, data=None):
+#    cred = credentials.Certificate(server_key)
+#    firebase_admin.initialize_app(cred)
+#
+#    message = messaging.MulticastMessage(
+#        notification=messaging.Notification(
+#            title=title,
+#            body=body
+#        ),
+#        tokens=device_tokens
+#    )
+#    if data:
+#        message.data = data
+#
+#    response = messaging.send_multicast(message)
+#
+#    logger.info("Se ha enviado exitosamente la notificación:"+response)
+	
 router=APIRouter(tags=["match"])
 
 # Operaciones de la API
@@ -343,6 +387,18 @@ async def view_profile(id: str = Path(..., description="El id del usuario"), cli
         logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
 
+@router.get("/user/match/suscription",summary="Suscribe un token a un topic en particular")		
+async def suscribe(tokens:List[str],topic:str):
+    response = messaging.subscribe_to_topic(tokens, topic) 
+    if response.failure_count > 0:  
+        raise HTTPException(status_code=400,detail="Falló la suscripción del token "+token+" al topic "+topic)		
+
+@router.get("/user/match/unsuscription",summary="Desuscribe un token a un topic en particular")		
+async def unsuscribe(tokens:List[str],topic:str):
+    response = messaging.unsubscribe_from_topic(tokens, topic) 
+    if response.failure_count > 0:  
+        raise HTTPException(status_code=400,detail="Falló la desuscripción del token "+token+" al topic "+topic)		
+		
 @router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
 async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
     sql_query = '''
@@ -355,6 +411,15 @@ async def notification(userid_sender:str,userid_reciever:str,client_db = Depends
         "sender": userid_sender,
         "reciever": userid_reciever
     })
+	
+    #server_key = settings.notification_server_key
+
+    #device_tokens = [userid_reciever]
+
+    title = 'Nuevo mensaje'
+    body = 'Has recibido un nuevo mensaje'
+
+    send_push_notification("message",title, body)
 
 @router.post("/user/match/block",summary="Bloquear un usuario", response_class=Response)
 async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(client.get_db))-> None:

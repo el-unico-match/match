@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     LIKE_LIMITS:int=2
     SUPERLIKE_LIMITS:int=4
 
-    notification_server_key=''
+    notification_server_key:str=''
 	
     model_config = SettingsConfigDict(env_file=("dev.env",".env"))	
 

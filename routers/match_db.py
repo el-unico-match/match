@@ -387,14 +387,16 @@ async def view_profile(id: str = Path(..., description="El id del usuario"), cli
         logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
 
-@router.get("/user/match/suscription",summary="Suscribe un token a un topic en particular")		
-async def suscribe(tokens:List[str],topic:str):
+@router.post("/user/match/suscription",summary="Suscribe un token a un topic en particular", response_class=Response)		
+async def suscribe(token:str,topic:str)-> None:
+    tokens=[token]
     response = messaging.subscribe_to_topic(tokens, topic) 
     if response.failure_count > 0:  
         raise HTTPException(status_code=400,detail="Falló la suscripción del token "+token+" al topic "+topic)		
 
-@router.get("/user/match/unsuscription",summary="Desuscribe un token a un topic en particular")		
-async def unsuscribe(tokens:List[str],topic:str):
+@router.post("/user/match/unsuscription",summary="Desuscribe un token a un topic en particular", response_class=Response)		
+async def unsuscribe(token:str,topic:str)-> None:
+    tokens=[token]
     response = messaging.unsubscribe_from_topic(tokens, topic) 
     if response.failure_count > 0:  
         raise HTTPException(status_code=400,detail="Falló la desuscripción del token "+token+" al topic "+topic)		

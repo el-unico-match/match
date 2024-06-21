@@ -18,7 +18,7 @@ server_key = settings.notification_server_key
 firebase_cred = credentials.Certificate(server_key)
 firebase_app = firebase_admin.initialize_app(firebase_cred)
 
-logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
+logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)  
 			
 def profile_schema(profile)-> dict:
@@ -85,10 +85,12 @@ router=APIRouter(tags=["match"])
 @router.post("/user/match/push_notification",summary="Envía una notificación a al destinatario correspondiente", response_class=Response)			
 async def send_push_notification(destinationid:str,title:str, message:str, match:str,type:str)->None:	
     data = {
-    'match': match,
-    'type': type
+    'Match': match,
+    'Tipo': type
     }
     send_push_notification(destinationid,title, message, data)
+#    send_push_notification(destinationid,title, message)
+
 	
 def send_push_notification(destinationid,title, message, data=None):
 

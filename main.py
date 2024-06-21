@@ -5,7 +5,7 @@ summary="Microservicio que se encarga de todo lo relativo a match"
 
 app=FastAPI(
     title="match",
-    version="0.0.10",
+    version="0.0.11",
     summary=summary,
     docs_url='/api-docs'
 )

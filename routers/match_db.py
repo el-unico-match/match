@@ -282,6 +282,9 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         if (match.qualification == 'like'):
             newvalues['last_like_date'] = datetime.now()
             newvalues['like_counter'] += 1
+			body = 'Alguien te dio like'
+            send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})	
+			
     else:
         if (myprofile['last_like_date'].date() < datetime.now().date()):
             newvalues['superlike_counter'] = 0
@@ -293,6 +296,10 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             newvalues['last_like_date'] = datetime.now()
             newvalues['superlike_counter'] += 1
 
+        if (match.qualification == 'like'):
+            body = myprofile['username']+' te dio like'	
+            send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})			
+			
     query = '''
         update profiles 
         set last_like_date = :last_like_date,
@@ -321,7 +328,30 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     )
 
     await client_db.execute(new_match)
+	
 
+#def regular_user_push_notification(originid,destinationid,title, body,data):	
+#    title = 'Nuevo like'
+#    body = 'Alguien te dio like'
+#
+#    data = {
+#    'Match': originid,
+#    'Tipo': "Like"
+#    }	
+#	
+#    send_push_notification(destinationid,title, body,data)	
+
+#def premium_user_push_notification(destinationid,title, body,data):	
+#    title = 'Nuevo like'
+#    body = 'Alguien te dio like'
+#
+#    data = {
+#    'Match': originid,
+#    'Tipo': "Like"
+#    }	
+#	
+#    send_push_notification(destinationid,title, body,data)	
+	
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_model=Profile)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db)): 
     query = client.profiles.insert().values(userid =new_profile.userid,

@@ -295,7 +295,9 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         if (match.qualification == 'superlike'):
             newvalues['last_like_date'] = datetime.now()
             newvalues['superlike_counter'] += 1
-
+            body = myprofile['username']+' te dio superlike'	
+            send_push_notification(match.userid_qualificated,'Nuevo superlike', body,{'Match': match.userid_qualificator,'Tipo': "SuperLike"})
+			
         if (match.qualification == 'like'):
             body = myprofile['username']+' te dio like'	
             send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})			

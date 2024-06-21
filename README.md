@@ -20,6 +20,9 @@
 >
 > <br/>
 
+# Archivo de ejemplo con varios perfiles de usuarios
+https://github.com/el-unico-match/match/blob/dev/data/match-profiles-example.json
+
 # Instrucciones
 
 ### Para iniciar el server: 

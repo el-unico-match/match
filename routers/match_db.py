@@ -80,21 +80,29 @@ def filter_schema(filter)-> dict:
     }
     return schema
 
-def send_push_notification(topic,title, body, data=None):
+@router.post("/user/match/notification",summary="Envía una notificación a al destinatario correspondiente", response_class=Response)			
+async def send_push_notification(destinationid:str,title:str, message:str, match:str,type:str)->None:	
+    data = {
+    'match': match,
+    'type': type
+    }
+	send_push_notification(destinationid,title, message, data)
+	
+def send_push_notification(destinationid,title, message, data=None):
 
     message = messaging.Message(
         notification=messaging.Notification(
             title=title,
-            body=body
+            body=message
         ),
-        topic=topic
+        topic=destinationid
     )
     if data:
         message.data = data
 
     response = messaging.send(message)
 
-    logger.info("Se ha enviado exitosamente la notificación:"+response+" para el topic:"+topic)	
+    logger.info("Se ha enviado exitosamente la notificación:"+response+" a:"+destinationid)	
 	
 #def send_push_notification(server_key, device_tokens, title, body, data=None):
 #    cred = credentials.Certificate(server_key)
@@ -385,19 +393,19 @@ async def view_profile(id: str = Path(..., description="El id del usuario"), cli
         logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
 
-@router.post("/user/match/suscription",summary="Suscribe un token a un topic en particular", response_class=Response)		
-async def suscribe(token:str,topic:str)-> None:
-    tokens=[token]
-    response = messaging.subscribe_to_topic(tokens, topic) 
-    if response.failure_count > 0:  
-        raise HTTPException(status_code=400,detail="Falló la suscripción del token "+token+" al topic "+topic)		
+#@router.post("/user/match/suscription",summary="Suscribe un token a un topic en particular", response_class=Response)		
+#async def suscribe(token:str,topic:str)-> None:
+#    tokens=[token]
+#    response = messaging.subscribe_to_topic(tokens, topic) 
+#    if response.failure_count > 0:  
+#        raise HTTPException(status_code=400,detail="Falló la suscripción del token "+token+" al topic "+topic)		
 
-@router.post("/user/match/unsuscription",summary="Desuscribe un token a un topic en particular", response_class=Response)		
-async def unsuscribe(token:str,topic:str)-> None:
-    tokens=[token]
-    response = messaging.unsubscribe_from_topic(tokens, topic) 
-    if response.failure_count > 0:  
-        raise HTTPException(status_code=400,detail="Falló la desuscripción del token "+token+" al topic "+topic)		
+#@router.post("/user/match/unsuscription",summary="Desuscribe un token a un topic en particular", response_class=Response)		
+#async def unsuscribe(token:str,topic:str)-> None:
+#    tokens=[token]
+#    response = messaging.unsubscribe_from_topic(tokens, topic) 
+#    if response.failure_count > 0:  
+#        raise HTTPException(status_code=400,detail="Falló la desuscripción del token "+token+" al topic "+topic)		
 		
 @router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
 async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
@@ -411,15 +419,11 @@ async def notification(userid_sender:str,userid_reciever:str,client_db = Depends
         "sender": userid_sender,
         "reciever": userid_reciever
     })
-	
-    #server_key = settings.notification_server_key
 
-    #device_tokens = [userid_reciever]
+    #title = 'Nuevo mensaje'
+    #body = 'Has recibido un nuevo mensaje'
 
-    title = 'Nuevo mensaje'
-    body = 'Has recibido un nuevo mensaje'
-
-    send_push_notification("message",title, body)
+    #send_push_notification("message",title, body)
 
 @router.post("/user/match/block",summary="Bloquear un usuario", response_class=Response)
 async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(client.get_db))-> None:

@@ -81,8 +81,6 @@ def filter_schema(filter)-> dict:
     return schema
 
 def send_push_notification(topic,title, body, data=None):
-    cred = credentials.Certificate(server_key)
-    firebase_admin.initialize_app(cred)
 
     message = messaging.Message(
         notification=messaging.Notification(

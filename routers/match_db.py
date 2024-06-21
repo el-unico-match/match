@@ -422,10 +422,16 @@ async def notification(userid_sender:str,userid_reciever:str,client_db = Depends
         "reciever": userid_reciever
     })
 
-    #title = 'Nuevo mensaje'
-    #body = 'Has recibido un nuevo mensaje'
+    title = 'Nuevo mensaje'
+    body = 'Has recibido un nuevo mensaje'
 
-    #send_push_notification("message",title, body)
+    data = {
+    'Match': userid_sender,
+    'Tipo': "Mensaje"
+    }	
+	
+    send_push_notification(userid_reciever,title, body,data)
+#    send_push_notification("message",title, body)
 
 @router.post("/user/match/block",summary="Bloquear un usuario", response_class=Response)
 async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(client.get_db))-> None:

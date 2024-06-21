@@ -80,13 +80,15 @@ def filter_schema(filter)-> dict:
     }
     return schema
 
-@router.post("/user/match/notification",summary="Envía una notificación a al destinatario correspondiente", response_class=Response)			
+router=APIRouter(tags=["match"])	
+	
+@router.post("/user/match/push_notification",summary="Envía una notificación a al destinatario correspondiente", response_class=Response)			
 async def send_push_notification(destinationid:str,title:str, message:str, match:str,type:str)->None:	
     data = {
     'match': match,
     'type': type
     }
-	send_push_notification(destinationid,title, message, data)
+    send_push_notification(destinationid,title, message, data)
 	
 def send_push_notification(destinationid,title, message, data=None):
 
@@ -121,8 +123,6 @@ def send_push_notification(destinationid,title, message, data=None):
 #    response = messaging.send_multicast(message)
 #
 #    logger.info("Se ha enviado exitosamente la notificación:"+response)
-	
-router=APIRouter(tags=["match"])
 
 # Operaciones de la API
 @router.get("/status",summary="Retorna el estado del servicio")

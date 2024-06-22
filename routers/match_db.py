@@ -281,8 +281,8 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         
         if (match.qualification == 'like'):
             newvalues['last_like_date'] = datetime.now()
-            newvalues['like_counter'] += 1
-			body = 'Alguien te dio like'
+            newvalues['like_counter']+=1
+            body='Alguien te dio like'
             send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})	
 			
     else:

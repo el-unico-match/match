@@ -10,7 +10,15 @@ import data.client as client
 import logging
 import math
 
-logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import messaging
+
+server_key = settings.notification_server_key
+firebase_cred = credentials.Certificate(server_key)
+firebase_app = firebase_admin.initialize_app(firebase_cred)
+
+logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)  
 			
 def profile_schema(profile)-> dict:
@@ -72,7 +80,51 @@ def filter_schema(filter)-> dict:
     }
     return schema
 
-router=APIRouter(tags=["match"])
+router=APIRouter(tags=["match"])	
+	
+@router.post("/user/match/push_notification",summary="Envía una notificación a al destinatario correspondiente", response_class=Response)			
+async def send_push_notification(destinationid:str,title:str, message:str, match:str,type:str)->None:	
+    data = {
+    'Match': match,
+    'Tipo': type
+    }
+    send_push_notification(destinationid,title, message, data)
+#    send_push_notification(destinationid,title, message)
+
+	
+def send_push_notification(destinationid,title, message, data=None):
+
+    message = messaging.Message(
+        notification=messaging.Notification(
+            title=title,
+            body=message
+        ),
+        topic=destinationid
+    )
+    if data:
+        message.data = data
+
+    response = messaging.send(message)
+
+    logger.info("Se ha enviado exitosamente la notificación:"+response+" a:"+destinationid)	
+	
+#def send_push_notification(server_key, device_tokens, title, body, data=None):
+#    cred = credentials.Certificate(server_key)
+#    firebase_admin.initialize_app(cred)
+#
+#    message = messaging.MulticastMessage(
+#        notification=messaging.Notification(
+#            title=title,
+#            body=body
+#        ),
+#        tokens=device_tokens
+#    )
+#    if data:
+#        message.data = data
+#
+#    response = messaging.send_multicast(message)
+#
+#    logger.info("Se ha enviado exitosamente la notificación:"+response)
 
 # Operaciones de la API
 @router.get("/status",summary="Retorna el estado del servicio")
@@ -230,6 +282,9 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         if (match.qualification == 'like'):
             newvalues['last_like_date'] = datetime.now()
             newvalues['like_counter'] += 1
+			body = 'Alguien te dio like'
+            send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})	
+			
     else:
         if (myprofile['last_like_date'].date() < datetime.now().date()):
             newvalues['superlike_counter'] = 0
@@ -240,7 +295,13 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         if (match.qualification == 'superlike'):
             newvalues['last_like_date'] = datetime.now()
             newvalues['superlike_counter'] += 1
-
+            body = myprofile['username']+' te dio superlike'	
+            send_push_notification(match.userid_qualificated,'Nuevo superlike', body,{'Match': match.userid_qualificator,'Tipo': "SuperLike"})
+			
+        if (match.qualification == 'like'):
+            body = myprofile['username']+' te dio like'	
+            send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})			
+			
     query = '''
         update profiles 
         set last_like_date = :last_like_date,
@@ -269,7 +330,30 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     )
 
     await client_db.execute(new_match)
+	
 
+#def regular_user_push_notification(originid,destinationid,title, body,data):	
+#    title = 'Nuevo like'
+#    body = 'Alguien te dio like'
+#
+#    data = {
+#    'Match': originid,
+#    'Tipo': "Like"
+#    }	
+#	
+#    send_push_notification(destinationid,title, body,data)	
+
+#def premium_user_push_notification(destinationid,title, body,data):	
+#    title = 'Nuevo like'
+#    body = 'Alguien te dio like'
+#
+#    data = {
+#    'Match': originid,
+#    'Tipo': "Like"
+#    }	
+#	
+#    send_push_notification(destinationid,title, body,data)	
+	
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_model=Profile)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db)): 
     query = client.profiles.insert().values(userid =new_profile.userid,
@@ -343,6 +427,20 @@ async def view_profile(id: str = Path(..., description="El id del usuario"), cli
         logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
 
+#@router.post("/user/match/suscription",summary="Suscribe un token a un topic en particular", response_class=Response)		
+#async def suscribe(token:str,topic:str)-> None:
+#    tokens=[token]
+#    response = messaging.subscribe_to_topic(tokens, topic) 
+#    if response.failure_count > 0:  
+#        raise HTTPException(status_code=400,detail="Falló la suscripción del token "+token+" al topic "+topic)		
+
+#@router.post("/user/match/unsuscription",summary="Desuscribe un token a un topic en particular", response_class=Response)		
+#async def unsuscribe(token:str,topic:str)-> None:
+#    tokens=[token]
+#    response = messaging.unsubscribe_from_topic(tokens, topic) 
+#    if response.failure_count > 0:  
+#        raise HTTPException(status_code=400,detail="Falló la desuscripción del token "+token+" al topic "+topic)		
+		
 @router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
 async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
     sql_query = '''
@@ -355,6 +453,17 @@ async def notification(userid_sender:str,userid_reciever:str,client_db = Depends
         "sender": userid_sender,
         "reciever": userid_reciever
     })
+
+    title = 'Nuevo mensaje'
+    body = 'Has recibido un nuevo mensaje'
+
+    data = {
+    'Match': userid_sender,
+    'Tipo': "Mensaje"
+    }	
+	
+    send_push_notification(userid_reciever,title, body,data)
+#    send_push_notification("message",title, body)
 
 @router.post("/user/match/block",summary="Bloquear un usuario", response_class=Response)
 async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(client.get_db))-> None:

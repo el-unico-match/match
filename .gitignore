@@ -4,5 +4,6 @@
 dev.env
 *.pyc
 *.log
+*.json
 
 __pycache__

@@ -162,6 +162,38 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
     #    print(tuple(result.values()))
 
     return matchs_schema(results) 
+
+
+@router.get(
+        "/user/{id}/likes",
+        response_model=List[MatchOut],
+        summary="Retorna una lista con todos los likes")
+async def view_likes(id:str,client_db = Depends(client.get_db)):
+    logger.error("retornando lista de likes")
+
+    sql_query = '''
+        Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,
+               orig.qualification qualification_1, NULL qualification_2,
+               orig.qualification_date qualification_date_1, NULL qualification_date_2,
+               pf1.username username_1, pf2.username username_2
+        from matchs orig
+           inner join profiles pf1 on orig.userid_qualificator = pf1.userid
+           left  join matchs dest on orig.userid_qualificated = dest.userid_qualificator 
+                                 and orig.userid_qualificator = dest.userid_qualificated
+			inner join profiles pf2 on orig.userid_qualificated = pf2.userid
+        where orig.qualification = :like
+          and dest.userid_qualificated is NULL
+          and orig.userid_qualificator = :id
+          and not orig.blocked
+        order by orig.last_message_date desc
+    '''
+    
+    results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
+    
+    #for result in results:
+    #    print(tuple(result.values()))
+
+    return matchs_schema(results) 
 	
 @router.get("/user/{id}/profiles/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
 async def profiles_filter(

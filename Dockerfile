@@ -14,6 +14,9 @@ COPY main.py /
 COPY settings.py /
 COPY requirements.txt /
 
+# Copies the notification file settings into the workdir
+COPY firebase.json / 
+
 # Builds python solution
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 

@@ -313,10 +313,11 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         
         if (match.qualification == 'like'):
             newvalues['last_like_date'] = datetime.now()
-            newvalues['like_counter']+=1
-            body='Alguien te dio like'
-            send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})	
-			
+            newvalues['like_counter'] += 1
+            body = 'Alguien te dio like'
+            send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})
+            if is_match(match.userid_qualificated,match.userid_qualificator):
+                send_match_notification(match.userid_qualificator,match.userid_qualificated)               						
     else:
         if (myprofile['last_like_date'].date() < datetime.now().date()):
             newvalues['superlike_counter'] = 0
@@ -329,11 +330,21 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             newvalues['superlike_counter'] += 1
             body = myprofile['username']+' te dio superlike'	
             send_push_notification(match.userid_qualificated,'Nuevo superlike', body,{'Match': match.userid_qualificator,'Tipo': "SuperLike"})
+            #...
+            if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
+                send_match_notification(match.userid_qualificator,match.userid_qualificated) 			
 			
         if (match.qualification == 'like'):
             body = myprofile['username']+' te dio like'	
             send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})			
-			
+            if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
+                send_match_notification(match.userid_qualificator,match.userid_qualificated) 			
+
+    if (match.qualification == 'dislike'):
+        if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
+            body = 'Perdiste la posibilidad de hacer match'			
+            send_push_notification(match.userid_qualificator,'Nuevo match perdido', body,{'Match': match.userid_qualificated,'Tipo': "MatchPerdido"})	
+				
     query = '''
         update profiles 
         set last_like_date = :last_like_date,
@@ -362,8 +373,20 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     )
 
     await client_db.execute(new_match)
-	
 
+async def receive_like_or_superlike(calificated,calificator):
+    query = "SELECT matchs.qualification FROM matchs WHERE matchs.userid_qualificator = :calificated AND matchs.userid_qualificated = :calificator"
+    row = await client_db.fetch_one(query = query, values={"calificated": calificated,"calificator": calificator}) 
+	#TODO falta contemplar caso que la row no exista, en ese caso debe retornar false!!!
+    if not row:
+       return False
+    return row["qualification"]=="like" or row["qualification"]=="superlike"  	
+	
+def send_match_notification(userid_qualificator,userid_qualificated):
+    body = 'Hiciste match'
+    send_push_notification(userid_qualificated,'Nuevo match', body,{'Match': userid_qualificator,'Tipo': "Match"})
+    send_push_notification(userid_qualificator,'Nuevo match', body,{'Match': userid_qualificated,'Tipo': "Match"}) 	
+	
 #def regular_user_push_notification(originid,destinationid,title, body,data):	
 #    title = 'Nuevo like'
 #    body = 'Alguien te dio like'

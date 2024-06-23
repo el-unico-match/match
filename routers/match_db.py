@@ -173,8 +173,8 @@ async def view_likes(id:str,client_db = Depends(client.get_db)):
 
     sql_query = '''
         Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,
-               orig.qualification qualification_1, NULL qualification_2,
-               orig.qualification_date qualification_date_1, NULL qualification_date_2,
+               orig.qualification qualification_1, '' qualification_2,
+               orig.qualification_date qualification_date_1, orig.qualification_date qualification_date_2,
                pf1.username username_1, pf2.username username_2
         from matchs orig
            inner join profiles pf1 on orig.userid_qualificator = pf1.userid

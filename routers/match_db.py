@@ -181,14 +181,14 @@ async def view_likes(id:str,client_db = Depends(client.get_db)):
            left  join matchs dest on orig.userid_qualificated = dest.userid_qualificator 
                                  and orig.userid_qualificator = dest.userid_qualificated
 			inner join profiles pf2 on orig.userid_qualificated = pf2.userid
-        where orig.qualification = :like
+        where orig.qualification in (:like, :superlike)
           and dest.userid_qualificated is NULL
-          and orig.userid_qualificator = :id
+          and orig.userid_qualificated = :id
           and not orig.blocked
         order by orig.last_message_date desc
     '''
     
-    results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
+    results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like", "superlike":"superlike"})
     
     #for result in results:
     #    print(tuple(result.values()))

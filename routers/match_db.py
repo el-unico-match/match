@@ -300,13 +300,13 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             body = myprofile['username']+' te dio superlike'	
             send_push_notification(match.userid_qualificated,'Nuevo superlike', body,{'Match': match.userid_qualificator,'Tipo': "SuperLike"})
             #...
-            if is_match(match.userid_qualificated,match.userid_qualificator):
+            if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
                 send_match_notification(match.userid_qualificator,match.userid_qualificated) 			
 			
         if (match.qualification == 'like'):
             body = myprofile['username']+' te dio like'	
             send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})			
-            if is_match(match.userid_qualificated,match.userid_qualificator):
+            if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
                 send_match_notification(match.userid_qualificator,match.userid_qualificated) 			
 			
     query = '''
@@ -338,13 +338,13 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
 
     await client_db.execute(new_match)
 
-async def is_match(calificated,calificator):
+async def receive_like_or_superlike(calificated,calificator):
     query = "SELECT matchs.qualification FROM matchs WHERE matchs.userid_qualificator = :calificated AND matchs.userid_qualificated = :calificator"
     row = await client_db.fetch_one(query = query, values={"calificated": calificated,"calificator": calificator}) 
 	#TODO falta contemplar caso que la row no exista, en ese caso debe retornar false!!!
     if not row:
-	   return False
-	return row["qualification"]=="like" or row["qualification"]=="superlike"  	
+       return False
+    return row["qualification"]=="like" or row["qualification"]=="superlike"  	
 	
 def send_match_notification(userid_qualificator,userid_qualificated):
     body = 'Hiciste match'

@@ -300,17 +300,17 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             body = myprofile['username']+' te dio superlike'	
             send_push_notification(match.userid_qualificated,'Nuevo superlike', body,{'Match': match.userid_qualificator,'Tipo': "SuperLike"})
             #...
-            if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
+            if await receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator,client_db):
                 send_match_notification(match.userid_qualificator,match.userid_qualificated) 			
 			
         if (match.qualification == 'like'):
             body = myprofile['username']+' te dio like'	
             send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})			
-            if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
+            if await receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator,client_db):
                 send_match_notification(match.userid_qualificator,match.userid_qualificated) 			
 
     if (match.qualification == 'dislike'):
-        if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
+        if await receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator,client_db):
             body = 'Perdiste la posibilidad de hacer match'			
             send_push_notification(match.userid_qualificator,'Nuevo match perdido', body,{'Match': match.userid_qualificated,'Tipo': "MatchPerdido"})	
 				
@@ -343,11 +343,12 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
 
     await client_db.execute(new_match)
 
-async def receive_like_or_superlike(calificated,calificator):
+async def receive_like_or_superlike(calificated,calificator,client_db):
     query = "SELECT matchs.qualification FROM matchs WHERE matchs.userid_qualificator = :calificated AND matchs.userid_qualificated = :calificator"
     row = await client_db.fetch_one(query = query, values={"calificated": calificated,"calificator": calificator}) 
 	#TODO falta contemplar caso que la row no exista, en ese caso debe retornar false!!!
     if not row:
+       #print("la otra persona todavía no dió like o dislike a tu perfil")
        return False
     return row["qualification"]=="like" or row["qualification"]=="superlike"  	
 	

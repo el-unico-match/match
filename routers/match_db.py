@@ -308,7 +308,12 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})			
             if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
                 send_match_notification(match.userid_qualificator,match.userid_qualificated) 			
-			
+
+    if (match.qualification == 'dislike'):
+        if receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator):
+            body = 'Perdiste la posibilidad de hacer match'			
+            send_push_notification(match.userid_qualificator,'Nuevo match perdido', body,{'Match': match.userid_qualificated,'Tipo': "MatchPerdido"})	
+				
     query = '''
         update profiles 
         set last_like_date = :last_like_date,

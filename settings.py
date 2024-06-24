@@ -1,3 +1,4 @@
+from typing import List
 from pydantic_settings import BaseSettings,SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -26,6 +27,7 @@ class Settings(BaseSettings):
     apikey_value:str=''
     apikey_status:str=''
     apikey_activate_endpoint:str=''
+    apikey_whitelist:List[str]=[]
     apikey_whitelist_endpoint:str=''
 
     LIKE_LIMITS:int=2

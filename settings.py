@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     db_credentials:str=''
     database_url:str=''
 	
+    apikey_value:str=''
+    apikey_status:str=''
+    apikey_activate_endpoint:str=''
+    apikey_whitelist_endpoint:str=''
+
     LIKE_LIMITS:int=2
     SUPERLIKE_LIMITS:int=4
 

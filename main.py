@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from routers import match_db
+from data.apikey import enableApiKey
 
 summary="Microservicio que se encarga de todo lo relativo a match"
 
@@ -9,6 +10,8 @@ app=FastAPI(
     summary=summary,
     docs_url='/api-docs'
 )
+
+enableApiKey()
 
 # Para iniciar el server hacer: uvicorn main:app --reload
 

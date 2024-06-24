@@ -4,6 +4,7 @@ from data.profile import Profile
 from typing import List,Union
 from endpoints.getSwipes import get_swipes_list
 from endpoints.putBlock import update_block_state, PutBlockRequest
+from endpoints.putWhitelist import update_whitelist, PutWhiteList
 from settings import settings
 from datetime import datetime
 import data.client as client
@@ -669,3 +670,9 @@ async def next_candidate(id:str = Path(..., description="El id del usuario"), cl
     
     #TODO: revisar porque falla el return de los datos obtenidos por la query
     return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
+
+
+@router.put("/whitelist",summary="Actualiza la whitelist del servicio")
+async def updateWhitelist(whitelist: PutWhiteList):
+    update_whitelist(whitelist)
+    return Response(status_code=201,content="Lista actualizada")

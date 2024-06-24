@@ -317,7 +317,7 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
             newvalues['like_counter'] += 1
             body = 'Alguien te dio like'
             send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})
-            if is_match(match.userid_qualificated,match.userid_qualificator):
+            if await receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator,client_db):
                 send_match_notification(match.userid_qualificator,match.userid_qualificated)               						
     else:
         if (myprofile['last_like_date'].date() < datetime.now().date()):

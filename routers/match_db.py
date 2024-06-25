@@ -138,7 +138,7 @@ async def view_status():
         response_model=List[MatchOut],
         summary="Retorna una lista con todos los matchs")
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
-    logger.error("retornando lista de matchs")
+    logger.info("retornando lista de matchs")
 
     sql_query = '''
         Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,
@@ -170,7 +170,7 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
         response_model=List[MatchOut],
         summary="Retorna una lista con todos los likes")
 async def view_likes(id:str,client_db = Depends(client.get_db)):
-    logger.error("retornando lista de likes")
+    logger.info("retornando lista de likes")
 
     sql_query = '''
         Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,
@@ -207,7 +207,7 @@ async def profiles_filter(
     distance:Union[float, None] = None,
     client_db = Depends(client.get_db)
 ):
-    logger.error("retornando perfil que coincida con el filtro")
+    logger.info("retornando perfil que coincida con el filtro")
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
     print(myprofile)
@@ -291,7 +291,7 @@ async def profiles_filter(
 #match/swipe
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):
-    logger.error("agregando un nuevo match")
+    logger.info("agregando un nuevo match")
     
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
@@ -595,7 +595,7 @@ async def updateWhitelist(whitelist: PutWhiteList):
         response_model=List[MatchOut],
         summary="Retorna una lista con todas las metricas de match")
 async def view_metrics(client_db = Depends(client.get_db)):
-    logger.error("retornando lista de likes")
+    logger.info("retornando lista de likes")
 
     sql_likes_v_match = '''
         Select Count(1) Likes,

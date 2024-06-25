@@ -212,6 +212,7 @@ async def profiles_filter(
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
     print(myprofile)
     if not myprofile:
+        logger.error("No se han encontrado perfiles con ese id")	
         raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
     
     arguments = { 'id': id, "superlike":"superlike" }
@@ -281,6 +282,7 @@ async def profiles_filter(
             dist = rad*rad*(xdist*xdist + ydist*ydist + zdist*zdist)
             if (dist < distance * distance):
                 return profile_schema(row)
+        logger.error("No se han encontrado perfiles para esta consulta")				
         return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
     
     if (results):

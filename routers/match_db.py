@@ -297,7 +297,7 @@ async def profiles_filter(
         profile=profile_schema(results[0])
         logger.info(profile)
         return profile	
-    #TODO: revisar porque falla el return de los datos obtenidos por la query
+    logger.error("No se han encontrado perfiles para esta consulta")				
     return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
 
 #match/swipe

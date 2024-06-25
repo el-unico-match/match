@@ -430,9 +430,7 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
     logger.info("creando el perfil en base de datos")	
     try:
         await client_db.execute(query)
-        
-        await client_db.execute(client.filters.insert().values(userid= new_profile.userid))
-
+        await client_db.execute(client.filters.insert().values(userid = new_profile.userid))
 
         query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
         result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})
@@ -596,7 +594,7 @@ async def updateWhitelist(whitelist: PutWhiteList):
         "/user/match/metrics",
         response_model=List[MatchOut],
         summary="Retorna una lista con todas las metricas de match")
-async def view_metrics(id:str,client_db = Depends(client.get_db)):
+async def view_metrics(client_db = Depends(client.get_db)):
     logger.error("retornando lista de likes")
 
     sql_likes_v_match = '''
@@ -609,14 +607,12 @@ async def view_metrics(id:str,client_db = Depends(client.get_db)):
                                  and dest.qualification in (:like, :superlike)
                                  and not dest.blocked
         where orig.qualification in (:like, :superlike)
-          and dest.userid_qualificated is NULL
           and not orig.blocked 
-        order by orig.last_message_date desc
     '''
     likes_v_match = await client_db.fetch_all(query = sql_likes_v_match, values = {"id":id,"like":"like", "superlike":"superlike"})
     
     return {
         "CantMatch": likes_v_match["Matches"],
         "LikesToMatchConversion": likes_v_match["Matches"] / likes_v_match["Likes"],
-        "MatchToChatConversion": likes_v_match["Chats"] / likes_v_match["Matches"],
+        "MatchToChatConversion": 0 if (likes_v_match["Matches"] == 0) else (likes_v_match["Chats"] / likes_v_match["Matches"]),
     }

@@ -609,7 +609,7 @@ async def view_metrics(client_db = Depends(client.get_db)):
         where orig.qualification in (:like, :superlike)
           and not orig.blocked 
     '''
-    likes_v_match = await client_db.fetch_all(query = sql_likes_v_match, values = {"id":id,"like":"like", "superlike":"superlike"})
+    likes_v_match = await client_db.fetch_all(query = sql_likes_v_match, values = {"like":"like", "superlike":"superlike"})
     
     return {
         "CantMatch": likes_v_match["Matches"],

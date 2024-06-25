@@ -477,6 +477,8 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
 
 @router.get("/user/{id}/match/profile/",summary="Obtiene el perfil solicitado", response_model=Profile)
 async def view_profile(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):     
+    logger.info("obteniendo el perfil solicitado")
+
     try: 	
         query = "SELECT * FROM profiles WHERE profiles.userid = :id"
         result = await client_db.fetch_one(query = query, values={"id": id})
@@ -503,6 +505,8 @@ async def view_profile(id: str = Path(..., description="El id del usuario"), cli
 		
 @router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
 async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
+    logger.info("notificando envío de mensaje")
+
     sql_query = '''
         update matchs 
         set last_message_date = NOW() 
@@ -527,6 +531,8 @@ async def notification(userid_sender:str,userid_reciever:str,client_db = Depends
 
 @router.post("/user/match/block",summary="Bloquear un usuario", response_class=Response)
 async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(client.get_db))-> None:
+    logger.info("bloqueando usuario")
+
     sql_query = '''
         update matchs 
         set blocked = TRUE 
@@ -539,6 +545,7 @@ async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(c
 
 @router.put("/user/match/block",summary="Cambiar el estado de bloqueo de un match", response_model=SwipesOut)
 async def change_match_block_state(request: PutBlockRequest, client_db = Depends(client.get_db)):
+    logger.info("cambiando el estado de bloqueo de un match")
     return await update_block_state(request, client_db)
 
 @router.get("/match/swipes",response_model=List[SwipesOut],summary="Retorna una lista con todos los matchs")
@@ -554,10 +561,13 @@ async def get_match_swipes(
     blocked: Union[bool, None] = None,
     client_db = Depends(client.get_db)
     ):
+    logger.info("retornando lista con todos los matchs")    
     return await get_swipes_list(swiper_id, swiped_id, swiper_names, superlikes, matchs, pending, likes, dislikes, blocked, client_db)
 
 @router.get("/user/{id}/match/filter/",summary="Obtiene el filtro solicitado", response_model=MatchFilter)
 async def view_filter(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):
+    logger.info("obteniendo filtro solicitado")
+
     query = "SELECT * FROM filters WHERE filters.userid = :id"
     result = await client_db.fetch_one(query = query, values={"id": id})
 
@@ -589,6 +599,8 @@ async def update_filter(matchfilter: MatchFilter, client_db = Depends(client.get
 
 @router.put("/whitelist",summary="Actualiza la whitelist del servicio")
 async def updateWhitelist(whitelist: PutWhiteList):
+    logger.info("actualizando whitelist del servicio")
+
     update_whitelist(whitelist)
     return Response(status_code=201,content="Lista actualizada")
 
@@ -597,7 +609,7 @@ async def updateWhitelist(whitelist: PutWhiteList):
         response_model=List[MatchOut],
         summary="Retorna una lista con todas las metricas de match")
 async def view_metrics(client_db = Depends(client.get_db)):
-    logger.info("retornando lista de likes")
+    #logger.info("retornando lista de likes")
 
     sql_likes_v_match = '''
         Select Count(1) Likes,

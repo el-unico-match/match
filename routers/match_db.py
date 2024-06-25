@@ -626,6 +626,7 @@ async def updateWhitelist(whitelist: PutWhiteList):
         summary="Retorna una lista con todas las metricas de match")
 async def view_metrics(client_db = Depends(client.get_db)):
     #logger.info("retornando lista de likes")
+    logger.info("retornando lista con todas las metricas de match")
 
     sql_likes_v_match = '''
         Select Count(1) Likes,

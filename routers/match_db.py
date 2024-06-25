@@ -4,13 +4,22 @@ from data.profile import Profile
 from typing import List,Union
 from endpoints.getSwipes import get_swipes_list
 from endpoints.putBlock import update_block_state, PutBlockRequest
+from endpoints.putWhitelist import update_whitelist, PutWhiteList
 from settings import settings
 from datetime import datetime
 import data.client as client
 import logging
 import math
 
-logging.basicConfig(filename=settings.log_filename,level=settings.logging_level)
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import messaging
+
+server_key = settings.notification_server_key
+firebase_cred = credentials.Certificate(server_key)
+firebase_app = firebase_admin.initialize_app(firebase_cred)
+
+logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)  
 			
 def profile_schema(profile)-> dict:
@@ -72,7 +81,51 @@ def filter_schema(filter)-> dict:
     }
     return schema
 
-router=APIRouter(tags=["match"])
+router=APIRouter(tags=["match"])	
+	
+@router.post("/user/match/push_notification",summary="Envía una notificación a al destinatario correspondiente", response_class=Response)			
+async def send_push_notification(destinationid:str,title:str, message:str, match:str,type:str)->None:	
+    data = {
+    'Match': match,
+    'Tipo': type
+    }
+    send_push_notification(destinationid,title, message, data)
+#    send_push_notification(destinationid,title, message)
+
+	
+def send_push_notification(destinationid,title, message, data=None):
+
+    message = messaging.Message(
+        notification=messaging.Notification(
+            title=title,
+            body=message
+        ),
+        topic=destinationid
+    )
+    if data:
+        message.data = data
+
+    response = messaging.send(message)
+
+    logger.info("Se ha enviado exitosamente la notificación:"+response+" a:"+destinationid)	
+	
+#def send_push_notification(server_key, device_tokens, title, body, data=None):
+#    cred = credentials.Certificate(server_key)
+#    firebase_admin.initialize_app(cred)
+#
+#    message = messaging.MulticastMessage(
+#        notification=messaging.Notification(
+#            title=title,
+#            body=body
+#        ),
+#        tokens=device_tokens
+#    )
+#    if data:
+#        message.data = data
+#
+#    response = messaging.send_multicast(message)
+#
+#    logger.info("Se ha enviado exitosamente la notificación:"+response)
 
 # Operaciones de la API
 @router.get("/status",summary="Retorna el estado del servicio")
@@ -105,6 +158,38 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
     '''
     
     results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like"})
+    
+    #for result in results:
+    #    print(tuple(result.values()))
+
+    return matchs_schema(results) 
+
+
+@router.get(
+        "/user/{id}/likes",
+        response_model=List[MatchOut],
+        summary="Retorna una lista con todos los likes")
+async def view_likes(id:str,client_db = Depends(client.get_db)):
+    logger.error("retornando lista de likes")
+
+    sql_query = '''
+        Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,
+               orig.qualification qualification_1, '' qualification_2,
+               orig.qualification_date qualification_date_1, orig.qualification_date qualification_date_2,
+               pf1.username username_1, pf2.username username_2
+        from matchs orig
+           inner join profiles pf1 on orig.userid_qualificator = pf1.userid
+           left  join matchs dest on orig.userid_qualificated = dest.userid_qualificator 
+                                 and orig.userid_qualificator = dest.userid_qualificated
+			inner join profiles pf2 on orig.userid_qualificated = pf2.userid
+        where orig.qualification in (:like, :superlike)
+          and dest.userid_qualificated is NULL
+          and orig.userid_qualificated = :id
+          and not orig.blocked
+        order by orig.last_message_date desc
+    '''
+    
+    results=await client_db.fetch_all(query = sql_query, values = {"id":id,"like":"like", "superlike":"superlike"})
     
     #for result in results:
     #    print(tuple(result.values()))
@@ -230,6 +315,10 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         if (match.qualification == 'like'):
             newvalues['last_like_date'] = datetime.now()
             newvalues['like_counter'] += 1
+            body = 'Alguien te dio like'
+            send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})
+            if await receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator,client_db):
+                send_match_notification(match.userid_qualificator,match.userid_qualificated)               						
     else:
         if (myprofile['last_like_date'].date() < datetime.now().date()):
             newvalues['superlike_counter'] = 0
@@ -240,7 +329,23 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
         if (match.qualification == 'superlike'):
             newvalues['last_like_date'] = datetime.now()
             newvalues['superlike_counter'] += 1
+            body = myprofile['username']+' te dio superlike'	
+            send_push_notification(match.userid_qualificated,'Nuevo superlike', body,{'Match': match.userid_qualificator,'Tipo': "SuperLike"})
+            #...
+            if await receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator,client_db):
+                send_match_notification(match.userid_qualificator,match.userid_qualificated) 			
+			
+        if (match.qualification == 'like'):
+            body = myprofile['username']+' te dio like'	
+            send_push_notification(match.userid_qualificated,'Nuevo like', body,{'Match': match.userid_qualificator,'Tipo': "Like"})			
+            if await receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator,client_db):
+                send_match_notification(match.userid_qualificator,match.userid_qualificated) 			
 
+    if (match.qualification == 'dislike'):
+        if await receive_like_or_superlike(match.userid_qualificated,match.userid_qualificator,client_db):
+            body = 'Perdiste la posibilidad de hacer match'			
+            send_push_notification(match.userid_qualificator,'Nuevo match perdido', body,{'Match': match.userid_qualificated,'Tipo': "MatchPerdido"})	
+				
     query = '''
         update profiles 
         set last_like_date = :last_like_date,
@@ -270,6 +375,42 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
 
     await client_db.execute(new_match)
 
+async def receive_like_or_superlike(calificated,calificator,client_db):
+    query = "SELECT matchs.qualification FROM matchs WHERE matchs.userid_qualificator = :calificated AND matchs.userid_qualificated = :calificator"
+    row = await client_db.fetch_one(query = query, values={"calificated": calificated,"calificator": calificator}) 
+	#TODO falta contemplar caso que la row no exista, en ese caso debe retornar false!!!
+    if not row:
+       #print("la otra persona todavía no dió like o dislike a tu perfil")
+       return False
+    return row["qualification"]=="like" or row["qualification"]=="superlike"  	
+	
+def send_match_notification(userid_qualificator,userid_qualificated):
+    body = 'Hiciste match'
+    send_push_notification(userid_qualificated,'Nuevo match', body,{'Match': userid_qualificator,'Tipo': "Match"})
+    send_push_notification(userid_qualificator,'Nuevo match', body,{'Match': userid_qualificated,'Tipo': "Match"}) 	
+	
+#def regular_user_push_notification(originid,destinationid,title, body,data):	
+#    title = 'Nuevo like'
+#    body = 'Alguien te dio like'
+#
+#    data = {
+#    'Match': originid,
+#    'Tipo': "Like"
+#    }	
+#	
+#    send_push_notification(destinationid,title, body,data)	
+
+#def premium_user_push_notification(destinationid,title, body,data):	
+#    title = 'Nuevo like'
+#    body = 'Alguien te dio like'
+#
+#    data = {
+#    'Match': originid,
+#    'Tipo': "Like"
+#    }	
+#	
+#    send_push_notification(destinationid,title, body,data)	
+	
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_model=Profile)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db)): 
     query = client.profiles.insert().values(userid =new_profile.userid,
@@ -289,9 +430,10 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
     logger.info("creando el perfil en base de datos")	
     try:
         await client_db.execute(query)
-        
+        await client_db.execute(client.filters.insert().values(userid = new_profile.userid))
+
         query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
-        result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})	
+        result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})
 
         print(tuple(result.values()))    
         return profile_schema(result)
@@ -343,6 +485,20 @@ async def view_profile(id: str = Path(..., description="El id del usuario"), cli
         logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
 
+#@router.post("/user/match/suscription",summary="Suscribe un token a un topic en particular", response_class=Response)		
+#async def suscribe(token:str,topic:str)-> None:
+#    tokens=[token]
+#    response = messaging.subscribe_to_topic(tokens, topic) 
+#    if response.failure_count > 0:  
+#        raise HTTPException(status_code=400,detail="Falló la suscripción del token "+token+" al topic "+topic)		
+
+#@router.post("/user/match/unsuscription",summary="Desuscribe un token a un topic en particular", response_class=Response)		
+#async def unsuscribe(token:str,topic:str)-> None:
+#    tokens=[token]
+#    response = messaging.unsubscribe_from_topic(tokens, topic) 
+#    if response.failure_count > 0:  
+#        raise HTTPException(status_code=400,detail="Falló la desuscripción del token "+token+" al topic "+topic)		
+		
 @router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
 async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
     sql_query = '''
@@ -355,6 +511,17 @@ async def notification(userid_sender:str,userid_reciever:str,client_db = Depends
         "sender": userid_sender,
         "reciever": userid_reciever
     })
+
+    title = 'Nuevo mensaje'
+    body = 'Has recibido un nuevo mensaje'
+
+    data = {
+    'Match': userid_sender,
+    'Tipo': "Mensaje"
+    }	
+	
+    send_push_notification(userid_reciever,title, body,data)
+#    send_push_notification("message",title, body)
 
 @router.post("/user/match/block",summary="Bloquear un usuario", response_class=Response)
 async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(client.get_db))-> None:
@@ -418,89 +585,34 @@ async def update_filter(matchfilter: MatchFilter, client_db = Depends(client.get
         logger.error(e)
         raise HTTPException(status_code=404,detail=str(e))
 
-@router.get("/user/{id}/match/nextcandidate",response_model=Profile,summary="Retorna un perfil que coincida con el gusto del usuario!")
-async def next_candidate(id:str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):
-    query = "SELECT * FROM profiles WHERE profiles.userid = :id"
-    myprofile = await client_db.fetch_one(query = query, values={"id": id})
-    if not myprofile:
-        raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
+@router.put("/whitelist",summary="Actualiza la whitelist del servicio")
+async def updateWhitelist(whitelist: PutWhiteList):
+    update_whitelist(whitelist)
+    return Response(status_code=201,content="Lista actualizada")
 
-    query = "SELECT * FROM filters WHERE userid = :id"
-    myfilter = await client_db.fetch_one(query = query, values={"id": id})
-    if not myfilter:
-        raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id")
-    
-    arguments = { 'id': id, "superlike":"superlike" }
-    sql_query = '''
-        Select pf.*
-        from profiles pf
-           left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated
-           left join matchs m2 on
-                            m2.userid_qualificated = :id
-                            and pf.userid = m2.userid_qualificator
-                            and m2.qualification = :superlike
-        where pf.userid <> :id and m.id is null
+@router.get(
+        "/user/match/metrics",
+        response_model=List[MatchOut],
+        summary="Retorna una lista con todas las metricas de match")
+async def view_metrics(client_db = Depends(client.get_db)):
+    logger.error("retornando lista de likes")
+
+    sql_likes_v_match = '''
+        Select Count(1) Likes,
+                Count(dest.userid_qualificator) Matches,
+                Count(orig.last_message_date) Chats
+        from matchs orig
+           left  join matchs dest on orig.userid_qualificated = dest.userid_qualificator 
+                                 and orig.userid_qualificator = dest.userid_qualificated
+                                 and dest.qualification in (:like, :superlike)
+                                 and not dest.blocked
+        where orig.qualification in (:like, :superlike)
+          and not orig.blocked 
     '''
-        
-    if (myfilter["gender"] != None):
-        sql_query += ' and pf.gender = :gender'
-        arguments["gender"] = myfilter["gender"]
+    likes_v_match = await client_db.fetch_all(query = sql_likes_v_match, values = {"like":"like", "superlike":"superlike"})
     
-    if (myfilter["age_from"] != None):
-        sql_query += ' and pf.age >= :age_from'
-        arguments["age_from"] = myfilter["age_from"]
-    
-    if (myfilter["age_to"] != None):
-        sql_query += ' and pf.age <= :age_to'
-        arguments["age_to"] = myfilter["age_to"]
-    
-    if (myfilter["education"] != None):
-        sql_query += ' and pf.education = :education'
-        arguments["education"] = myfilter["education"]
-    
-    if (myfilter["ethnicity"] != None):
-        sql_query += ' and pf.ethnicity = :ethnicity'
-        arguments["ethnicity"] = myfilter["ethnicity"]
-
-    sql_query += ' order by m2.userid_qualificator desc, pf.is_match_plus desc, pf.userid'
-	
-    results = await client_db.fetch_all(query = sql_query, values = arguments)
-
-    if (myfilter.distance != None):
-        for row in results:
-            # Para mejorar presicion usar cuentas correctas
-            #rad = 6371000.0 # valor en metros
-            #rad = 63710.0   # valor en cuadras
-            rad = 6371.0    # valor en kilometros
-
-            lat1 = math.radians(row["latitud"])
-            lon1 = math.radians(row["longitud"])
-            lat2 = math.radians(myprofile["latitud"])
-            lon2 = math.radians(myprofile["longitud"])
-
-            pos_row = [
-                math.sin(lat1)*math.cos(lon1),
-                math.sin(lat1)*math.sin(lon1),
-                math.cos(lat1)
-            ]
-            pos_prof = [
-                math.sin(lat2)*math.cos(lon2),
-                math.sin(lat2)*math.sin(lon2),
-                math.cos(lat2)
-            ]
-
-            xdist = pos_row[0]-pos_prof[0]
-            ydist = pos_row[1]-pos_prof[1]
-            zdist = pos_row[2]-pos_prof[2]
-
-            # Distance squared
-            dist = rad*rad*(xdist*xdist + ydist*ydist + zdist*zdist)
-            if (dist < myfilter["distance"] * myfilter["distance"]):
-                return profile_schema(row)
-        return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
-    
-    if (results):
-        return profile_schema(results[0])
-    
-    #TODO: revisar porque falla el return de los datos obtenidos por la query
-    return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
+    return {
+        "CantMatch": likes_v_match["Matches"],
+        "LikesToMatchConversion": likes_v_match["Matches"] / likes_v_match["Likes"],
+        "MatchToChatConversion": 0 if (likes_v_match["Matches"] == 0) else (likes_v_match["Chats"] / likes_v_match["Matches"]),
+    }

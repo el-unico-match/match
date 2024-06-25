@@ -1,13 +1,16 @@
 aiosqlite
 bson
 fastapi
+firebase_admin
 coveralls
 pydantic_settings 
 databases[asyncpg]
 psycopg2-binary
+pyjwt
 pytest
 pytest-cov
 pytest-asyncio
+requests
 sqlalchemy
 routers 
 typing

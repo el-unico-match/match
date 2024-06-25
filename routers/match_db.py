@@ -161,8 +161,10 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
     
     #for result in results:
     #    print(tuple(result.values()))
-
-    return matchs_schema(results) 
+	
+    matchs=matchs_schema(results) 
+    logger.info(matchs)	
+    return matchs	
 
 
 @router.get(
@@ -194,7 +196,11 @@ async def view_likes(id:str,client_db = Depends(client.get_db)):
     #for result in results:
     #    print(tuple(result.values()))
 
-    return matchs_schema(results) 
+    #return matchs_schema(results)
+	
+    likes=matchs_schema(results) 
+    logger.info(likes)	
+    return likes		
 	
 @router.get("/user/{id}/profiles/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
 async def profiles_filter(
@@ -281,12 +287,16 @@ async def profiles_filter(
             # Distance squared
             dist = rad*rad*(xdist*xdist + ydist*ydist + zdist*zdist)
             if (dist < distance * distance):
-                return profile_schema(row)
+                profile=profile_schema(row)
+                logger.info(profile)	
+                return profile
         logger.error("No se han encontrado perfiles para esta consulta")				
         return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
     
     if (results):
-        return profile_schema(results[0])
+        profile=profile_schema(results[0])
+        logger.info(profile)
+        return profile	
     #TODO: revisar porque falla el return de los datos obtenidos por la query
     return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
 
@@ -438,7 +448,9 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
         result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})
 
         print(tuple(result.values()))    
-        return profile_schema(result)
+        profile=profile_schema(result) 
+        logger.info(profile)	
+        return profile		
     except Exception as e:
         print(e)
         logger.error(e)
@@ -469,7 +481,9 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
         result = await client_db.fetch_one(query = query_2, values={"id": updated_profile.userid})	
 
         print(tuple(result.values()))    
-        return profile_schema(result)
+        profile=profile_schema(result) 
+        logger.info(profile)	
+        return profile		
     except Exception as e:
         print(e)
         logger.error(e)
@@ -483,7 +497,9 @@ async def view_profile(id: str = Path(..., description="El id del usuario"), cli
         query = "SELECT * FROM profiles WHERE profiles.userid = :id"
         result = await client_db.fetch_one(query = query, values={"id": id})
 
-        return profile_schema(result)
+        profile=profile_schema(result) 
+        logger.info(profile)	
+        return profile
     except Exception as e:
         print(e)
         logger.error(e)

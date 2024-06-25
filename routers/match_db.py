@@ -431,8 +431,11 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
     try:
         await client_db.execute(query)
         
+        await client_db.execute(client.filters.insert().values(userid= new_profile.userid))
+
+
         query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
-        result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})	
+        result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})
 
         print(tuple(result.values()))    
         return profile_schema(result)
@@ -584,95 +587,36 @@ async def update_filter(matchfilter: MatchFilter, client_db = Depends(client.get
         logger.error(e)
         raise HTTPException(status_code=404,detail=str(e))
 
-@router.get("/user/{id}/match/nextcandidate",response_model=Profile,summary="Retorna un perfil que coincida con el gusto del usuario!")
-async def next_candidate(id:str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):
-    query = "SELECT * FROM profiles WHERE profiles.userid = :id"
-    myprofile = await client_db.fetch_one(query = query, values={"id": id})
-    if not myprofile:
-        raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
-
-    query = "SELECT * FROM filters WHERE userid = :id"
-    myfilter = await client_db.fetch_one(query = query, values={"id": id})
-    if not myfilter:
-        raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id")
-    
-    arguments = { 'id': id, "superlike":"superlike" }
-    sql_query = '''
-        Select pf.*
-        from profiles pf
-           left join matchs m on m.userid_qualificator = :id and pf.userid = m.userid_qualificated
-           left join matchs m2 on
-                            m2.userid_qualificated = :id
-                            and pf.userid = m2.userid_qualificator
-                            and m2.qualification = :superlike
-        where pf.userid <> :id and m.id is null
-    '''
-        
-    if (myfilter["gender"] != None):
-        sql_query += ' and pf.gender = :gender'
-        arguments["gender"] = myfilter["gender"]
-    
-    if (myfilter["age_from"] != None):
-        sql_query += ' and pf.age >= :age_from'
-        arguments["age_from"] = myfilter["age_from"]
-    
-    if (myfilter["age_to"] != None):
-        sql_query += ' and pf.age <= :age_to'
-        arguments["age_to"] = myfilter["age_to"]
-    
-    if (myfilter["education"] != None):
-        sql_query += ' and pf.education = :education'
-        arguments["education"] = myfilter["education"]
-    
-    if (myfilter["ethnicity"] != None):
-        sql_query += ' and pf.ethnicity = :ethnicity'
-        arguments["ethnicity"] = myfilter["ethnicity"]
-
-    sql_query += ' order by m2.userid_qualificator desc, pf.is_match_plus desc, pf.userid'
-	
-    results = await client_db.fetch_all(query = sql_query, values = arguments)
-
-    if (myfilter.distance != None):
-        for row in results:
-            # Para mejorar presicion usar cuentas correctas
-            #rad = 6371000.0 # valor en metros
-            #rad = 63710.0   # valor en cuadras
-            rad = 6371.0    # valor en kilometros
-
-            lat1 = math.radians(row["latitud"])
-            lon1 = math.radians(row["longitud"])
-            lat2 = math.radians(myprofile["latitud"])
-            lon2 = math.radians(myprofile["longitud"])
-
-            pos_row = [
-                math.sin(lat1)*math.cos(lon1),
-                math.sin(lat1)*math.sin(lon1),
-                math.cos(lat1)
-            ]
-            pos_prof = [
-                math.sin(lat2)*math.cos(lon2),
-                math.sin(lat2)*math.sin(lon2),
-                math.cos(lat2)
-            ]
-
-            xdist = pos_row[0]-pos_prof[0]
-            ydist = pos_row[1]-pos_prof[1]
-            zdist = pos_row[2]-pos_prof[2]
-
-            # Distance squared
-            dist = rad*rad*(xdist*xdist + ydist*ydist + zdist*zdist)
-            if (dist < myfilter["distance"] * myfilter["distance"]):
-                return profile_schema(row)
-        return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
-    
-    if (results):
-        return profile_schema(results[0])
-    
-    #TODO: revisar porque falla el return de los datos obtenidos por la query
-    return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
-
-
 @router.put("/whitelist",summary="Actualiza la whitelist del servicio")
 async def updateWhitelist(whitelist: PutWhiteList):
     update_whitelist(whitelist)
     return Response(status_code=201,content="Lista actualizada")
+
+@router.get(
+        "/user/match/metrics",
+        response_model=List[MatchOut],
+        summary="Retorna una lista con todas las metricas de match")
+async def view_metrics(id:str,client_db = Depends(client.get_db)):
+    logger.error("retornando lista de likes")
+
+    sql_likes_v_match = '''
+        Select Count(1) Likes,
+                Count(dest.userid_qualificator) Matches,
+                Count(orig.last_message_date) Chats
+        from matchs orig
+           left  join matchs dest on orig.userid_qualificated = dest.userid_qualificator 
+                                 and orig.userid_qualificator = dest.userid_qualificated
+                                 and dest.qualification in (:like, :superlike)
+                                 and not dest.blocked
+        where orig.qualification in (:like, :superlike)
+          and dest.userid_qualificated is NULL
+          and not orig.blocked 
+        order by orig.last_message_date desc
+    '''
+    likes_v_match = await client_db.fetch_all(query = sql_likes_v_match, values = {"id":id,"like":"like", "superlike":"superlike"})
+    
+    return {
+        "CantMatch": likes_v_match["Matches"],
+        "LikesToMatchConversion": likes_v_match["Matches"] / likes_v_match["Likes"],
+        "MatchToChatConversion": likes_v_match["Chats"] / likes_v_match["Matches"],
+    }

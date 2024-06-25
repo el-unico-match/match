@@ -290,14 +290,14 @@ async def profiles_filter(
                 profile=profile_schema(row)
                 logger.info(profile)	
                 return profile
-        logger.error("No se han encontrado perfiles para esta consulta")				
+        logger.info("No se han encontrado perfiles para esta consulta")				
         return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
     
     if (results):
         profile=profile_schema(results[0])
         logger.info(profile)
         return profile	
-    logger.error("No se han encontrado perfiles para esta consulta")				
+    logger.info("No se han encontrado perfiles para esta consulta")				
     return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
 
 #match/swipe

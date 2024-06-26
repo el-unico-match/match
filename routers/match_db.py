@@ -590,7 +590,7 @@ async def view_filter(id: str = Path(..., description="El id del usuario"), clie
 #    return filter_schema(result)
     filter=filter_schema(result)
     logger.info(filter)
-	return filter
+    return filter
 
 @router.put("/user/{id}/match/filter/",summary="Actualiza el filtro solicitado", response_model=MatchFilter)
 async def update_filter(matchfilter: MatchFilter, client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario")):

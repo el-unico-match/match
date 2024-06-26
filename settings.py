@@ -28,7 +28,9 @@ class Settings(BaseSettings):
     apikey_status:str=''
     apikey_activate_endpoint:str=''
     apikey_whitelist:List[str]=[]
-    apikey_whitelist_endpoint:str=''
+
+    isIngoingSecurityCheckEnabled:bool=False
+    isOutgoingSecurityCheckEnabled:bool=False
 
     LIKE_LIMITS:int=2
     SUPERLIKE_LIMITS:int=4

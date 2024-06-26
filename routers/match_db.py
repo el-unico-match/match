@@ -131,7 +131,11 @@ def send_push_notification(destinationid,title, message, data=None):
 @router.get("/status",summary="Retorna el estado del servicio")
 async def view_status(): 
     logger.info("retornando status")
-    return {"status":"ok"}
+    return {
+        "status":"ok",
+        "apikey_status": settings.apikey_status,
+        "apikeys_count": len(settings.apikey_whitelist),
+    }
 
 @router.get(
         "/user/{id}/matchs",

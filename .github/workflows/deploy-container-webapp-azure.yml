@@ -24,6 +24,11 @@ jobs:
           echo "db_name=${{ vars.DB_NAME }}" >> .env
           echo "db_credentials=${{ secrets.DB_CREDENTIALS }}" >> .env
           echo "notification_server_key=${{ vars.NOTIFICATION_SERVERKEY_FILENAME }}" >> .env
+          echo "apikey_value=${{ secrets.APIKEY_VALUE  }}" >> .env            
+          echo "apikey_activate_endpoint=${{ vars.APIKEY_ACTIVATE_ENDPOINT  }}" >> .env 
+          echo "apikey_whitelist=${{ secrets.APIKEY_WHITELIST }}" >> .env
+          echo "isIngoingSecurityCheckEnabled=${{ vars.ISINGOINGSECURITYCHECKENABLED  }}" >> .env 
+          echo "isOutgoingSecurityCheckEnabled=${{ vars.ISOUTGOINGSECURITYCHECKENABLED  }}" >> .env       
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0

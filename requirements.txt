@@ -1,8 +1,10 @@
 aiosqlite
+asyncio
 bson
+coveralls
 fastapi
 firebase_admin
-coveralls
+httpx
 pydantic_settings 
 databases[asyncpg]
 psycopg2-binary

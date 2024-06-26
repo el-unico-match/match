@@ -1,9 +1,9 @@
 from settings import settings
-import requests
+import httpx
 import jwt
 import logging
 
-def enableApiKey():
+async def enableApiKey():
     logger=logging.getLogger(__name__)
 
     if (settings.apikey_value != '' and settings.apikey_activate_endpoint != ''):
@@ -13,10 +13,11 @@ def enableApiKey():
             url = f"{settings.apikey_activate_endpoint}{decoded_jwt['id']}"
             headers = {'x-apikey': settings.apikey_value}
             json={'availability': 'enabled'}
-            response = requests.patch(url, headers=headers, json=json)
+            response = httpx.patch(url, headers=headers, json=json)
 
-            if ( response.status_code == 200):
-                settings.apikey_status = response.availability
+            if (response.status_code == 200):
+                data = response.json()
+                settings.apikey_status = data['availability']
                 logger.info("apikey enabled") 
 
             else:

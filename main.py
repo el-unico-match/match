@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from routers import match_db
+from settings import settings
 from data.apikey import enableApiKey
+from middlewares.ingoingSecurityCheck import IngoingSecurityCheck
+from middlewares.outgoingSecurityCheck import OutgoingSecurityCheck
+import asyncio
 
 summary="Microservicio que se encarga de todo lo relativo a match"
 
@@ -11,18 +15,13 @@ app=FastAPI(
     docs_url='/api-docs'
 )
 
-enableApiKey()
+app.add_middleware(IngoingSecurityCheck)
+app.add_middleware(OutgoingSecurityCheck)
 
 # Para iniciar el server hacer: uvicorn main:app --reload
-
-# Routers (subconjuntos dentro de la API principal)
-#if settings.disable_db==True:
-#   print("no usa bd")
-#   app.include_router(match.router)
-#else:
-#   print("usa bd")
-#   app.include_router(match_db.router)
 app.include_router(match_db.router)
+
+asyncio.create_task(enableApiKey())
 
 # HTTP response
 # 100 información

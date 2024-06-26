@@ -137,6 +137,13 @@ async def view_status():
         "apikeys_count": len(settings.apikey_whitelist),
     }
 
+@router.get("/log",summary="Retorna el log del servicio")
+async def view_log (): 
+   logger.info("retornando log")
+   with open(settings.log_filename, "r") as file:
+      contents = file.read()
+      return contents
+
 @router.get(
         "/user/{id}/matchs",
         response_model=List[MatchOut],

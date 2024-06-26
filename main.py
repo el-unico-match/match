@@ -1,6 +1,9 @@
+import logging
+from settings import settings
+logging.basicConfig(filename=settings.log_filename, level=settings.logging_level, format='%(asctime)s - %(levelname)s - %(message)s')
+
 from fastapi import FastAPI
 from routers import match_db
-from settings import settings
 from data.apikey import enableApiKey
 from middlewares.ingoingSecurityCheck import IngoingSecurityCheck
 from middlewares.outgoingSecurityCheck import OutgoingSecurityCheck

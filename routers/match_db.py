@@ -577,7 +577,7 @@ async def get_match_swipes(
     blocked: Union[bool, None] = None,
     client_db = Depends(client.get_db)
     ):
-    logger.info("retornando lista con todos los matchs")    
+    #logger.info("retornando lista con todos los matchs")    
     return await get_swipes_list(swiper_id, swiped_id, swiper_names, superlikes, matchs, pending, likes, dislikes, blocked, client_db)
 
 @router.get("/user/{id}/match/filter/",summary="Obtiene el filtro solicitado", response_model=MatchFilter)
@@ -587,7 +587,10 @@ async def view_filter(id: str = Path(..., description="El id del usuario"), clie
     query = "SELECT * FROM filters WHERE filters.userid = :id"
     result = await client_db.fetch_one(query = query, values={"id": id})
 
-    return filter_schema(result)
+#    return filter_schema(result)
+    filter=filter_schema(result)
+    logger.info(filter)
+	return filter
 
 @router.put("/user/{id}/match/filter/",summary="Actualiza el filtro solicitado", response_model=MatchFilter)
 async def update_filter(matchfilter: MatchFilter, client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario")):
@@ -608,7 +611,10 @@ async def update_filter(matchfilter: MatchFilter, client_db = Depends(client.get
         query = "SELECT * FROM filters WHERE filters.userid = :id"
         result = await client_db.fetch_one(query = query, values={"id": matchfilter.userid})
 
-        return filter_schema(result)
+#        return filter_schema(result)
+        filter=filter_schema(result)
+        logger.info(filter)
+        return filter
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=404,detail=str(e))
@@ -642,8 +648,10 @@ async def view_metrics(client_db = Depends(client.get_db)):
     '''
     likes_v_match = await client_db.fetch_all(query = sql_likes_v_match, values = {"like":"like", "superlike":"superlike"})
     
-    return {
+    metrics= {
         "CantMatch": likes_v_match["Matches"],
         "LikesToMatchConversion": likes_v_match["Matches"] / likes_v_match["Likes"],
         "MatchToChatConversion": 0 if (likes_v_match["Matches"] == 0) else (likes_v_match["Chats"] / likes_v_match["Matches"]),
     }
+    logger.info(metrics)
+    return metrics

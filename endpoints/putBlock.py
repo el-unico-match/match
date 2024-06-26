@@ -1,6 +1,11 @@
 from http.client import HTTPException
 from pydantic import BaseModel
 from endpoints.getSwipes import get_swipes_list
+from settings import settings
+import logging
+
+logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
+logger=logging.getLogger(__name__) 
 
 # Entidad para definir los perfiles
 class PutBlockRequest(BaseModel):
@@ -27,6 +32,7 @@ async def update_block_state(request: PutBlockRequest,client_db: any):
     values['isBlocked'] = request.isBlocked
 
     if ( len(rows) == 0 ):
+        logger.error("No se ha encontrado el match.")
         raise HTTPException(status_code=404,detail="No se ha encontrado el match.") 		
 
     update_block_status = '''
@@ -50,5 +56,5 @@ async def update_block_state(request: PutBlockRequest,client_db: any):
         blocked = None,
         client_db = client_db
     )
-
+    logger.info(swipes[0])
     return swipes[0]

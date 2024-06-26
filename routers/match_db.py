@@ -138,7 +138,7 @@ async def view_status():
         response_model=List[MatchOut],
         summary="Retorna una lista con todos los matchs")
 async def view_matchs(id:str,client_db = Depends(client.get_db)):
-    logger.error("retornando lista de matchs")
+    logger.info("retornando lista de matchs")
 
     sql_query = '''
         Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,
@@ -161,8 +161,10 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
     
     #for result in results:
     #    print(tuple(result.values()))
-
-    return matchs_schema(results) 
+	
+    matchs=matchs_schema(results) 
+    logger.info(matchs)	
+    return matchs	
 
 
 @router.get(
@@ -170,7 +172,7 @@ async def view_matchs(id:str,client_db = Depends(client.get_db)):
         response_model=List[MatchOut],
         summary="Retorna una lista con todos los likes")
 async def view_likes(id:str,client_db = Depends(client.get_db)):
-    logger.error("retornando lista de likes")
+    logger.info("retornando lista de likes")
 
     sql_query = '''
         Select orig.userid_qualificator userid_1, orig.userid_qualificated userid_2,
@@ -194,7 +196,11 @@ async def view_likes(id:str,client_db = Depends(client.get_db)):
     #for result in results:
     #    print(tuple(result.values()))
 
-    return matchs_schema(results) 
+    #return matchs_schema(results)
+	
+    likes=matchs_schema(results) 
+    logger.info(likes)	
+    return likes		
 	
 @router.get("/user/{id}/profiles/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
 async def profiles_filter(
@@ -207,11 +213,12 @@ async def profiles_filter(
     distance:Union[float, None] = None,
     client_db = Depends(client.get_db)
 ):
-    logger.error("retornando perfil que coincida con el filtro")
+    logger.info("retornando perfil que coincida con el filtro")
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
     print(myprofile)
     if not myprofile:
+        logger.error("No se han encontrado perfiles con ese id")	
         raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
     
     arguments = { 'id': id, "superlike":"superlike" }
@@ -280,18 +287,23 @@ async def profiles_filter(
             # Distance squared
             dist = rad*rad*(xdist*xdist + ydist*ydist + zdist*zdist)
             if (dist < distance * distance):
-                return profile_schema(row)
+                profile=profile_schema(row)
+                logger.info(profile)	
+                return profile
+        logger.info("No se han encontrado perfiles para esta consulta")				
         return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
     
     if (results):
-        return profile_schema(results[0])
-    #TODO: revisar porque falla el return de los datos obtenidos por la query
+        profile=profile_schema(results[0])
+        logger.info(profile)
+        return profile	
+    logger.info("No se han encontrado perfiles para esta consulta")				
     return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
 
 #match/swipe
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):
-    logger.error("agregando un nuevo match")
+    logger.info("agregando un nuevo match")
     
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
@@ -436,7 +448,9 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
         result = await client_db.fetch_one(query = query_2, values={"id": new_profile.userid})
 
         print(tuple(result.values()))    
-        return profile_schema(result)
+        profile=profile_schema(result) 
+        logger.info(profile)	
+        return profile		
     except Exception as e:
         print(e)
         logger.error(e)
@@ -467,7 +481,9 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
         result = await client_db.fetch_one(query = query_2, values={"id": updated_profile.userid})	
 
         print(tuple(result.values()))    
-        return profile_schema(result)
+        profile=profile_schema(result) 
+        logger.info(profile)	
+        return profile		
     except Exception as e:
         print(e)
         logger.error(e)
@@ -475,11 +491,15 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
 
 @router.get("/user/{id}/match/profile/",summary="Obtiene el perfil solicitado", response_model=Profile)
 async def view_profile(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):     
+    logger.info("obteniendo el perfil solicitado")
+
     try: 	
         query = "SELECT * FROM profiles WHERE profiles.userid = :id"
         result = await client_db.fetch_one(query = query, values={"id": id})
 
-        return profile_schema(result)
+        profile=profile_schema(result) 
+        logger.info(profile)	
+        return profile
     except Exception as e:
         print(e)
         logger.error(e)
@@ -501,6 +521,8 @@ async def view_profile(id: str = Path(..., description="El id del usuario"), cli
 		
 @router.post("/user/match/notification",summary="Notificar que se envio un mensaje", response_class=Response)
 async def notification(userid_sender:str,userid_reciever:str,client_db = Depends(client.get_db))-> None:
+    logger.info("notificando envío de mensaje")
+
     sql_query = '''
         update matchs 
         set last_message_date = NOW() 
@@ -525,6 +547,8 @@ async def notification(userid_sender:str,userid_reciever:str,client_db = Depends
 
 @router.post("/user/match/block",summary="Bloquear un usuario", response_class=Response)
 async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(client.get_db))-> None:
+    logger.info("bloqueando usuario")
+
     sql_query = '''
         update matchs 
         set blocked = TRUE 
@@ -537,6 +561,7 @@ async def block_user(userid_bloquer:str,userid_blocked:str,client_db = Depends(c
 
 @router.put("/user/match/block",summary="Cambiar el estado de bloqueo de un match", response_model=SwipesOut)
 async def change_match_block_state(request: PutBlockRequest, client_db = Depends(client.get_db)):
+    logger.info("cambiando el estado de bloqueo de un match")
     return await update_block_state(request, client_db)
 
 @router.get("/match/swipes",response_model=List[SwipesOut],summary="Retorna una lista con todos los matchs")
@@ -552,14 +577,20 @@ async def get_match_swipes(
     blocked: Union[bool, None] = None,
     client_db = Depends(client.get_db)
     ):
+    #logger.info("retornando lista con todos los matchs")    
     return await get_swipes_list(swiper_id, swiped_id, swiper_names, superlikes, matchs, pending, likes, dislikes, blocked, client_db)
 
 @router.get("/user/{id}/match/filter/",summary="Obtiene el filtro solicitado", response_model=MatchFilter)
 async def view_filter(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):
+    logger.info("obteniendo filtro solicitado")
+
     query = "SELECT * FROM filters WHERE filters.userid = :id"
     result = await client_db.fetch_one(query = query, values={"id": id})
 
-    return filter_schema(result)
+#    return filter_schema(result)
+    filter=filter_schema(result)
+    logger.info(filter)
+    return filter
 
 @router.put("/user/{id}/match/filter/",summary="Actualiza el filtro solicitado", response_model=MatchFilter)
 async def update_filter(matchfilter: MatchFilter, client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario")):
@@ -580,13 +611,18 @@ async def update_filter(matchfilter: MatchFilter, client_db = Depends(client.get
         query = "SELECT * FROM filters WHERE filters.userid = :id"
         result = await client_db.fetch_one(query = query, values={"id": matchfilter.userid})
 
-        return filter_schema(result)
+#        return filter_schema(result)
+        filter=filter_schema(result)
+        logger.info(filter)
+        return filter
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=404,detail=str(e))
 
 @router.put("/whitelist",summary="Actualiza la whitelist del servicio")
 async def updateWhitelist(whitelist: PutWhiteList):
+    logger.info("actualizando whitelist del servicio")
+
     update_whitelist(whitelist)
     return Response(status_code=201,content="Lista actualizada")
 
@@ -595,7 +631,8 @@ async def updateWhitelist(whitelist: PutWhiteList):
         response_model=List[MatchOut],
         summary="Retorna una lista con todas las metricas de match")
 async def view_metrics(client_db = Depends(client.get_db)):
-    logger.error("retornando lista de likes")
+    #logger.info("retornando lista de likes")
+    logger.info("retornando lista con todas las metricas de match")
 
     sql_likes_v_match = '''
         Select Count(1) Likes,
@@ -611,8 +648,10 @@ async def view_metrics(client_db = Depends(client.get_db)):
     '''
     likes_v_match = await client_db.fetch_all(query = sql_likes_v_match, values = {"like":"like", "superlike":"superlike"})
     
-    return {
+    metrics= {
         "CantMatch": likes_v_match["Matches"],
         "LikesToMatchConversion": likes_v_match["Matches"] / likes_v_match["Likes"],
         "MatchToChatConversion": 0 if (likes_v_match["Matches"] == 0) else (likes_v_match["Chats"] / likes_v_match["Matches"]),
     }
+    logger.info(metrics)
+    return metrics

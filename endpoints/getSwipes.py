@@ -1,5 +1,11 @@
 from data.match import SwipesOut
 from typing import Union
+from settings import settings
+import logging
+
+logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
+logger=logging.getLogger(__name__) 
+
 
 def swipe_likes_schema(result)-> dict:
     schema= {
@@ -36,6 +42,8 @@ async def get_swipes_list(
     blocked: Union[bool, None],
     client_db: any):
 
+    logger.info("retornando lista con todos los matchs")
+	
     values = { 
         "like": 'like',
         "superlike": 'superlike',
@@ -120,5 +128,5 @@ async def get_swipes_list(
     data = await client_db.fetch_all(query, values)
 
     results = swipe_result(data) 
-
+    logger.info(results)
     return results

@@ -188,6 +188,20 @@ def test_define_preference_with_more_likes_than_limit():
     response = response.text
     print(response)
     assert response == '{"detail":"Se alcanzo el limite de likes"}'
+
+def test_define_standard_user_preference_with_superlike():
+    response = client.post("/user/4321/match/preference",
+	json={
+  "userid_qualificator": "4321",
+  "userid_qualificated": "3",
+  "qualification": "superlike"
+})
+
+    #print(response) 
+    assert response.status_code == 400, response.text
+    response = response.text
+    print(response)
+    assert response == '{"detail":"Usuario normal no puede dar superlikes"}'
 	
 #def test_get_inexistent_user_profile_filter():
 #    response = client.get("/user/1234/profiles/filter")

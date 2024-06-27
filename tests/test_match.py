@@ -82,3 +82,7 @@ def test_update_inexistent_user_profile():
 #def test_get_inexistent_user_profile_filter():
 #    response = client.get("/user/1234/profiles/filter")
 #    assert response.status_code == 404, response.text
+
+#def test_get_inexistent_user_candidate():
+#    response = client.get("/user/1234/match/nextcandidate")
+#    assert response.status_code == 404, response.text

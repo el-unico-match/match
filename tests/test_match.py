@@ -61,6 +61,25 @@ def test_view_inexistent_user_profile():
 """
 
 """
+
+#def test_create_existent_user_profile():
+#    response = client.post("/user/profile",
+#	json={
+#        "userid": "4321",	
+#        "username": "Luis",
+#        "gender": "Hombre",
+#        "looking_for": "Mujer",
+#        "age": 33,
+#        "education": "Universitaria",
+#        "ethnicity": "",
+#        "is_match_plus": True,
+#        "latitud": 23.3223,
+#        "longitud": 55.82,
+#        "like_counter": 0,
+#        "superlike_counter": 0
+#    })
+#    assert response.status_code == 404, response.text
+	
 def test_update_inexistent_user_profile():
     response = client.put("/user/profile/1234",
 	json={

@@ -42,7 +42,9 @@ class Mock:
         #print("valores:")
         #print(values)
         #print(type(values))		
-        if(values['id']=="4321"):
+        if(values['id']!="4321"):
+           raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id") 
+        else:
            return {  "userid": "4321",
   "gender": "Hombre",
   "age_from": 28,

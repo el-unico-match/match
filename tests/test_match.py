@@ -20,10 +20,10 @@ app.dependency_overrides[client.get_db] = override_get_db
 
 client = TestClient(app)
 
-##def test_status():
-##    response = client.get("/status")
-##    assert response.status_code == 200
-##    assert response.json()['status'] == "ok"
+def test_status():
+    response = client.get("/status")
+    assert response.status_code == 200
+    assert response.json()['status'] == "ok"
 """
 
 """

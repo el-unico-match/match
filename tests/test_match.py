@@ -138,6 +138,19 @@ def test_view_matchs():
     assert data["matched"]["username"] == "Ryan Gosling"
     assert data["matched"]["qualification"] == "like"	
     assert data["matched"]["qualification_date"] == "2024-06-06T17:55:48.670889"
+
+def test_view_likes():
+    response = client.get("/user/4321/likes")
+    assert response.status_code == 200, response.text
+    data = response.json()[0] 
+    assert data["myself"]["userid"] == "4321"
+    assert data["myself"]["username"] == "Angelina Jolie"
+    assert data["myself"]["qualification"] == "like"
+    assert data["myself"]["qualification_date"] == "2024-06-05T23:24:11.580459"
+    assert data["matched"]["userid"] == "3"
+    assert data["matched"]["username"] == "Ryan Gosling"
+    assert data["matched"]["qualification"] == "like"	
+    assert data["matched"]["qualification_date"] == "2024-06-06T17:55:48.670889"
 	
 #def test_get_inexistent_user_profile_filter():
 #    response = client.get("/user/1234/profiles/filter")

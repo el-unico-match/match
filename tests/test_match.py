@@ -42,7 +42,8 @@ def test_view_inexistent_user_profile():
 #        "like_counter": 0,
 #        "superlike_counter": 0
 #    })
-
+#
+#   print(response) 
 #    assert response.status_code == 200, response.text
 #    data = response.json()[0]
 #    assert data["userid"] == "4321"
@@ -61,6 +62,25 @@ def test_view_inexistent_user_profile():
 """
 
 """
+
+#def test_view_profile():
+#    response = client.get("/user/4321/match/profile")
+#
+#    print(response) 
+#    assert response.status_code == 200, response.text
+#    data = response.json()[0]
+#    assert data["userid"] == "4321"
+#    assert data["username"] == "Luis"
+#    assert data["gender"] == "Hombre"
+#    assert data["looking_for"] == "Mujer"
+#    assert data["age"] == 33
+#    assert data["education"] == "Universitaria"
+#    assert data["ethnicity"] == ""	
+#    assert data["is_match_plus"] == True
+#    assert data["latitud"] == 23.3223
+#    assert data["longitud"] == 55.82
+#    assert data["like_counter"] == 0
+#    assert data["superlike_counter"] == 0
 
 #def test_create_existent_user_profile():
 #    response = client.post("/user/profile",

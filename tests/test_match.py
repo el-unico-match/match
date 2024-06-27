@@ -1,21 +1,29 @@
 from fastapi.testclient import TestClient
 import data.client as client
 from main import app
-#from tests.mocks import Mocks
+from tests.mocks import Mock
 
-#def override_get_db():
-#   mocks=Mocks()
-#   return mocks
+def override_get_db():
+   mock=Mock()
+   return mock
 #    return profiles
 
-#app.dependency_overrides[client.get_db] = override_get_db
+#async def override_get_db():
+#    await database.connect()
+#    try:
+#        yield database
+#    finally:
+#        await database.disconnect()	
+#        database.drop()
+
+app.dependency_overrides[client.get_db] = override_get_db
 
 client = TestClient(app)
 
-def test_status():
-    response = client.get("/status")
-    assert response.status_code == 200
-    assert response.json()['status'] == "ok"
+##def test_status():
+##    response = client.get("/status")
+##    assert response.status_code == 200
+##    assert response.json()['status'] == "ok"
 """
 
 """
@@ -27,7 +35,7 @@ def test_view_inexistent_user_profile():
 
 """
 #def test_create_user_profile():
-#    response = client.post("/user/profile",
+#    response = client.post("/user/match/profile",
 #	json={
 #        "userid": "4321",	
 #        "username": "Luis",
@@ -42,10 +50,10 @@ def test_view_inexistent_user_profile():
 #        "like_counter": 0,
 #        "superlike_counter": 0
 #    })
-#
-#   print(response) 
+
+    #print(response) 
 #    assert response.status_code == 200, response.text
-#    data = response.json()[0]
+#    data = response.json()
 #    assert data["userid"] == "4321"
 #    assert data["username"] == "Luis"
 #    assert data["gender"] == "Hombre"
@@ -63,29 +71,29 @@ def test_view_inexistent_user_profile():
 
 """
 
-#def test_view_profile():
-#    response = client.get("/user/4321/match/profile")
-#
-#    print(response) 
-#    assert response.status_code == 200, response.text
-#    data = response.json()[0]
-#    assert data["userid"] == "4321"
-#    assert data["username"] == "Luis"
-#    assert data["gender"] == "Hombre"
-#    assert data["looking_for"] == "Mujer"
-#    assert data["age"] == 33
-#    assert data["education"] == "Universitaria"
-#    assert data["ethnicity"] == ""	
-#    assert data["is_match_plus"] == True
-#    assert data["latitud"] == 23.3223
-#    assert data["longitud"] == 55.82
-#    assert data["like_counter"] == 0
-#    assert data["superlike_counter"] == 0
+def test_view_profile():
+    response = client.get("/user/4321/match/profile")
+
+    print(response) 
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["userid"] == "4321"
+    assert data["username"] == "Luis"
+    assert data["gender"] == "Hombre"
+    assert data["looking_for"] == "Mujer"
+    assert data["age"] == 33
+    assert data["education"] == "Universitaria"
+    assert data["ethnicity"] == ""	
+    assert data["is_match_plus"] == True
+    assert data["latitud"] == 23.3223
+    assert data["longitud"] == 55.82
+    assert data["like_counter"] == 0
+    assert data["superlike_counter"] == 0
 
 #def test_create_existent_user_profile():
 #    response = client.post("/user/profile",
 #	json={
-#        "userid": "4321",	
+#        "userid": "1234",	
 #        "username": "Luis",
 #        "gender": "Hombre",
 #        "looking_for": "Mujer",

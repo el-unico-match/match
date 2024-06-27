@@ -36,7 +36,7 @@ https://github.com/el-unico-match/match/blob/dev/data/match-profiles-example.jso
 ### Para acceder a la documentación con swagger: 
   1) Abrir el navegador
   2) Escribir en la barra de direcciones: http://127.0.0.1:8000/api-docs
-  3) En el servidor remoto: https://profile-uniquegroup-match-fiuba.azurewebsites.net/api-docs
+  3) En el servidor remoto: https://match-uniquegroup-match-fiuba.azurewebsites.net/api-docs
   
 ### Para acceder a la documentación con Redocly: 
   1) Abrir el navegador

@@ -47,7 +47,7 @@ def test_create_user_profile():
         "is_match_plus": False,
         "latitud": 5.3432,
         "longitud": 7.846,
-        "like_counter": 0,
+        "like_counter": 4,
         "superlike_counter": 0
     })
 
@@ -64,7 +64,7 @@ def test_create_user_profile():
     assert data["is_match_plus"] == False
     assert data["latitud"] == 5.3432
     assert data["longitud"] == 7.846
-    assert data["like_counter"] == 0
+    assert data["like_counter"] == 4
     assert data["superlike_counter"] == 0
 	
 """
@@ -87,7 +87,7 @@ def test_view_profile():
     assert data["is_match_plus"] == False
     assert data["latitud"] == 5.3432
     assert data["longitud"] == 7.846
-    assert data["like_counter"] == 0
+    assert data["like_counter"] == 4
     assert data["superlike_counter"] == 0
 
 #def test_create_existent_user_profile():
@@ -121,7 +121,7 @@ def test_update_inexistent_user_profile():
   "is_match_plus": False,
   "latitud": 5.3432,
   "longitud": 7.846,
-  "like_counter": 0,
+  "like_counter": 4,
   "superlike_counter": 0
     })
     assert response.status_code == 404, response.text
@@ -152,7 +152,7 @@ def test_view_likes():
     assert data["matched"]["qualification"] == "like"	
     assert data["matched"]["qualification_date"] == "2024-06-06T17:55:48.670889"
 
-def test_update_user_filter():
+def test_update_filter():
     response = client.put("/user/4321/match/filter",
 	json={
   "userid": "4321",
@@ -174,11 +174,25 @@ def test_update_user_filter():
     assert data["education"] == ""
     assert data["ethnicity"] == ""	
     assert data["distance"] == 100
+
+def test_define_preference_with_more_likes_than_limit():
+    response = client.post("/user/4321/match/preference",
+	json={
+  "userid_qualificator": "4321",
+  "userid_qualificated": "3",
+  "qualification": "like"
+})
+
+    #print(response) 
+    assert response.status_code == 400, response.text
+    response = response.text
+    print(response)
+    assert response == '{"detail":"Se alcanzo el limite de likes"}'
 	
 #def test_get_inexistent_user_profile_filter():
 #    response = client.get("/user/1234/profiles/filter")
 #    assert response.status_code == 404, response.text
 
-def test_get_inexistent_user_candidate():
+def test_get_inexistent_user_next_candidate():
     response = client.get("/user/1234/match/nextcandidate")
     assert response.status_code == 404, response.text

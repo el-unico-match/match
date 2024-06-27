@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy import func, tuple_
+from datetime import datetime
 
 class Mock:
 
@@ -33,8 +34,8 @@ class Mock:
   "is_match_plus": False,
   "latitud": 5.3432,
   "longitud": 7.846,
-  "last_like_date":'',
-  "like_counter": 0,
+  "last_like_date":datetime.now(),#datetime.strptime('2024-06-05 23:24:11.564839','%Y-%m-%d %H:%M:%S.%f'),
+  "like_counter": 4,
   "superlike_counter": 0
         }
 

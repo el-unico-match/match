@@ -21,17 +21,17 @@ class Mock:
         if(values['id']!="4321"):
            raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 
         else:
-           return {"userid": "4321",	
-        "username": "Luis",
-        "gender": "Hombre",
-        "looking_for": "Mujer",
-        "age": 33,
-        "education": "Universitaria",
-        "ethnicity": "",
-        "is_match_plus": True,
-        "latitud": 23.3223,
-        "longitud": 55.82,
-        "last_like_date":"",
-        "like_counter": 0,
-        "superlike_counter": 0
+           return {  "userid": "4321",
+  "username": "Angelina Jolie",
+  "gender": "Mujer",
+  "looking_for": "Hombre",
+  "age": 48,
+  "education": "Estudios universitarios",
+  "ethnicity": "",
+  "is_match_plus": False,
+  "latitud": 5.3432,
+  "longitud": 7.846,
+  "last_like_date":'',
+  "like_counter": 0,
+  "superlike_counter": 0
         }

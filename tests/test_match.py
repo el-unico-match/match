@@ -151,6 +151,29 @@ def test_view_likes():
     assert data["matched"]["username"] == "Ryan Gosling"
     assert data["matched"]["qualification"] == "like"	
     assert data["matched"]["qualification_date"] == "2024-06-06T17:55:48.670889"
+
+def test_update_user_filter():
+    response = client.put("/user/4321/match/filter",
+	json={
+  "userid": "4321",
+  "gender": "Hombre",
+  "age_from": 28,
+  "age_to":48,
+  "education": "",
+  "ethnicity": "",
+  "distance": 100,
+    })
+
+    #print(response) 
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["userid"] == "4321"
+    assert data["gender"] == "Hombre"
+    assert data["age_from"] == 28
+    assert data["age_to"] == 48
+    assert data["education"] == ""
+    assert data["ethnicity"] == ""	
+    assert data["distance"] == 100
 	
 #def test_get_inexistent_user_profile_filter():
 #    response = client.get("/user/1234/profiles/filter")

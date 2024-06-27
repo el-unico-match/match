@@ -13,6 +13,8 @@ class Mock:
     async def fetch_one(self,query,values):
         if(query=="SELECT * FROM profiles WHERE profiles.userid = :id"):
            return self.execute_profile_query(values)
+        if(query=="SELECT * FROM filters WHERE filters.userid = :id"):
+           return self.execute_filter_query(values)	
 		   
     def execute_profile_query(self,values):
         #print("valores:")
@@ -34,6 +36,20 @@ class Mock:
   "last_like_date":'',
   "like_counter": 0,
   "superlike_counter": 0
+        }
+
+    def execute_filter_query(self,values):
+        #print("valores:")
+        #print(values)
+        #print(type(values))		
+        if(values['id']=="4321"):
+           return {  "userid": "4321",
+  "gender": "Hombre",
+  "age_from": 28,
+  "age_to":48,
+  "education": "",
+  "ethnicity": "",
+  "distance": 100,
         }
 		
     async def fetch_all(self,query,values):

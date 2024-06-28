@@ -37,6 +37,8 @@ class Settings(BaseSettings):
 
     notification_server_key:str=''
 	
+    mode:str='production'
+	
     model_config = SettingsConfigDict(env_file=("dev.env",".env"))	
 
 def loadSettings():

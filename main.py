@@ -24,7 +24,9 @@ app.add_middleware(OutgoingSecurityCheck)
 # Para iniciar el server hacer: uvicorn main:app --reload
 app.include_router(match_db.router)
 
-asyncio.create_task(enableApiKey())
+
+if settings.mode=='production':
+    asyncio.create_task(enableApiKey())
 
 # HTTP response
 # 100 información

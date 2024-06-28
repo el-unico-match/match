@@ -312,6 +312,36 @@ async def profiles_filter(
     logger.info("No se han encontrado perfiles para esta consulta")				
     return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
 
+router.get("/user/{id}/swipe",response_model=Profile,summary="Retorna el ultimo perfil que se le aplico preferencias!")
+async def swipe(
+    id:str,
+    client_db = Depends(client.get_db)
+):
+    logger.info("retornando ultimo perfil que se le aplicion preferencia")
+    query = "SELECT * FROM profiles WHERE profiles.userid = :id"
+    myprofile = await client_db.fetch_one(query = query, values={"id": id})
+    print(myprofile)
+    if not myprofile:
+        logger.error("No se han encontrado perfiles con ese id")	
+        raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
+    
+    arguments = { 'id': id }
+    sql_query = '''
+        SELECT id, userid_qualificator, userid_qualificated blocked
+	    FROM public.matchs
+        WHERE userid_qualificator = :id
+        order by id desc
+    '''
+	
+    results = await client_db.fetch_all(query = sql_query, values = arguments)
+    
+    if (results):
+        profile=profile_schema(results[0])
+        logger.info(profile)
+        return profile	
+    logger.info("No se han encontrado perfiles para esta consulta")				
+    return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
+
 #match/swipe
 @router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
 async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):

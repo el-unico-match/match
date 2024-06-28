@@ -14,9 +14,10 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import messaging
 
-server_key = settings.notification_server_key
-firebase_cred = credentials.Certificate(server_key)
-firebase_app = firebase_admin.initialize_app(firebase_cred)
+if settings.mode=='production':
+    server_key = settings.notification_server_key
+    firebase_cred = credentials.Certificate(server_key)
+    firebase_app = firebase_admin.initialize_app(firebase_cred)
 
 logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)  
@@ -93,20 +94,20 @@ async def send_push_notification(destinationid:str,title:str, message:str, match
 
 	
 def send_push_notification(destinationid,title, message, data=None):
+    if settings.mode=='production':
+        message = messaging.Message(
+                  notification=messaging.Notification(
+                  title=title,
+                  body=message
+                  ),
+                  topic=destinationid
+                  )
+        if data:
+            message.data = data
 
-    message = messaging.Message(
-        notification=messaging.Notification(
-            title=title,
-            body=message
-        ),
-        topic=destinationid
-    )
-    if data:
-        message.data = data
+        response = messaging.send(message)
 
-    response = messaging.send(message)
-
-    logger.info("Se ha enviado exitosamente la notificación:"+response+" a:"+destinationid)	
+        logger.info("Se ha enviado exitosamente la notificación:"+response+" a:"+destinationid)	
 	
 #def send_push_notification(server_key, device_tokens, title, body, data=None):
 #    cred = credentials.Certificate(server_key)

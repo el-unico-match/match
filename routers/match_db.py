@@ -327,7 +327,7 @@ async def rewind(
     
     arguments = { 'id': id }
     sql_query = '''
-        SELECT id, userid_qualificator, userid_qualificated blocked
+        SELECT *
 	    FROM public.matchs
         WHERE userid_qualificator = :id
         order by id desc

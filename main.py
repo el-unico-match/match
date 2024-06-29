@@ -25,8 +25,8 @@ app.add_middleware(OutgoingSecurityCheck)
 app.include_router(match_db.router)
 
 
-# if settings.mode=='production':
-asyncio.create_task(enableApiKey())
+if settings.mode=='production':
+    asyncio.create_task(enableApiKey())
 
 # HTTP response
 # 100 información

@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings,SettingsConfigDict
 class Settings(BaseSettings):
     disable_db:bool=False
 	
+    #logger_name:str='uvicorn.error'
     log_filename:str='match.log'
     NOTSET:int=0
     DEBUG:int=10

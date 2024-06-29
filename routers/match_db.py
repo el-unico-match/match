@@ -312,8 +312,8 @@ async def profiles_filter(
     logger.info("No se han encontrado perfiles para esta consulta")				
     return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
 
-router.get("/user/{id}/swipe",response_model=Profile,summary="Retorna el ultimo perfil que se le aplico preferencias!")
-async def swipe(
+@router.get("/user/{id}/rewind",response_model=Profile,summary="Retorna el ultimo perfil que se le aplico preferencias!")
+async def rewind(
     id:str,
     client_db = Depends(client.get_db)
 ):

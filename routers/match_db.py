@@ -318,12 +318,12 @@ async def rewind(
     client_db = Depends(client.get_db)
 ):
     logger.info("retornando ultimo perfil que se le aplicion preferencia")
-    query = "SELECT * FROM profiles WHERE profiles.userid = :id"
+    query = "SELECT * FROM profiles WHERE profiles.userid = :id and is_match_plus"
     myprofile = await client_db.fetch_one(query = query, values={"id": id})
     print(myprofile)
     if not myprofile:
-        logger.error("No se han encontrado perfiles con ese id")	
-        raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id")    
+        logger.error("No se han encontrado perfiles con ese id que sea match plus")	
+        raise HTTPException(status_code=404,detail="No se han encontrado perfiles con ese id que sea match plus")    
     
     arguments = { 'id': id }
     sql_query = '''

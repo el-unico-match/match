@@ -2,7 +2,7 @@ from fastapi import APIRouter,Path,Depends,Response,HTTPException
 from data.match import Match,MatchIn,MatchOut, SwipesOut, MatchFilter
 from data.profile import Profile
 from typing import List,Union
-from endpoints.getSwipes import get_swipes_list
+from endpoints.getSwipes import get_swipes_list, swipe_likes_schema
 from endpoints.putBlock import update_block_state, PutBlockRequest
 from endpoints.putWhitelist import update_whitelist, PutWhiteList
 from settings import settings
@@ -336,7 +336,7 @@ async def rewind(
     results = await client_db.fetch_all(query = sql_query, values = arguments)
     
     if (results):
-        profile=profile_schema(results[0])
+        profile=swipe_likes_schema(results[0])
         logger.info(profile)
         return profile	
     logger.info("No se han encontrado perfiles para esta consulta")				

@@ -2,7 +2,7 @@ from fastapi import APIRouter,Path,Depends,Response,HTTPException
 from data.match import Match,MatchIn,MatchOut, SwipesOut, MatchFilter
 from data.profile import Profile
 from typing import List,Union
-from endpoints.getSwipes import get_swipes_list, swipe_likes_schema
+from endpoints.getSwipes import get_swipes_list
 from endpoints.putBlock import update_block_state, PutBlockRequest
 from endpoints.putWhitelist import update_whitelist, PutWhiteList
 from settings import settings
@@ -39,7 +39,7 @@ def profile_schema(profile)-> dict:
         "like_counter":profile["like_counter"],
         "superlike_counter":profile["superlike_counter"],
     }
-    return schema			
+    return schema	
 
 def profiles_schema(profiles)-> list:
    list=[]
@@ -327,16 +327,17 @@ async def rewind(
     
     arguments = { 'id': id }
     sql_query = '''
-        SELECT *
-	    FROM public.matchs
+        SELECT pf.*
+            FROM public.matchs as m
+            Inner Join profiles pf on m.userid_qualificated = pf.userid
         WHERE userid_qualificator = :id
-        order by id desc
+        order by m.id desc
     '''
 	
     results = await client_db.fetch_all(query = sql_query, values = arguments)
     
     if (results):
-        profile=swipe_likes_schema(results[0])
+        profile=profile_schema(results[0])
         logger.info(profile)
         return profile	
     logger.info("No se han encontrado perfiles para esta consulta")				

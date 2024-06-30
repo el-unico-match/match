@@ -542,7 +542,7 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
 async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario")):     
     logger.info("bloquea el perfil en base de datos")
     query = profiles.update().where(profiles.columns.userid ==updated_profile.userid).values(
-        block = True
+        blocked = True
     )
     try: 	
         await client_db.execute(query)		

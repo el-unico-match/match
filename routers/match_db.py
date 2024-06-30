@@ -351,7 +351,7 @@ async def rewind(
 
 #match/swipe
 @router.post("/user/match",summary="Agrega un nuevo match")
-async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):
+async def define_preference(match:MatchIn,client_db = Depends(client.get_db)):
     logger.info("agregando un nuevo match")
     
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"

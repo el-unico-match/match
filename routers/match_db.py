@@ -355,9 +355,9 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
     logger.info("agregando un nuevo match")
     
     query = "SELECT * FROM profiles WHERE profiles.userid = :id"
-    myprofile = await client_db.fetch_one(query = query, values={"id": id})
+    myprofile = await client_db.fetch_one(query = query, values={"id": match.userid_qualificator})
     newvalues = {
-        "id": id,
+        "id": match.userid_qualificator,
         "last_like_date": myprofile["last_like_date"],
         "like_counter": myprofile["like_counter"],
         "superlike_counter": myprofile["superlike_counter"],

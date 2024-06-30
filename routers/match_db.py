@@ -220,7 +220,7 @@ async def view_likes(id:str,client_db = Depends(client.get_db)):
     logger.info(likes)	
     return likes		
 	
-@router.get("/user/{id}/profiles/filter",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
+@router.get("/user/{id}/profile",response_model=Profile,summary="Retorna un perfil que coincida con el filtro!")
 async def profiles_filter(
     id:str,
     gender:Union[str, None] = None,
@@ -350,7 +350,7 @@ async def rewind(
     return Response(status_code=204,content="No se han encontrado perfiles para esta consulta")
 
 #match/swipe
-@router.post("/user/{id}/match/preference",summary="Agrega un nuevo match")
+@router.post("/user/match",summary="Agrega un nuevo match")
 async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_db)):
     logger.info("agregando un nuevo match")
     
@@ -472,7 +472,7 @@ def send_match_notification(userid_qualificator,userid_qualificated):
 #	
 #    send_push_notification(destinationid,title, body,data)	
 	
-@router.post("/user/match/profile",summary="Crea un nuevo perfil", response_model=Profile)
+@router.post("/user/profile",summary="Crea un nuevo perfil", response_model=Profile)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db)): 
     query = client.profiles.insert().values(userid =new_profile.userid,
         username          = new_profile.username,
@@ -505,7 +505,7 @@ async def create_profile(new_profile:Profile,client_db = Depends(client.get_db))
         logger.error(e)
         raise HTTPException(status_code=400,detail="El perfil ya existe")
 
-@router.put("/user/{id}/match/profile/",summary="Actualiza el perfil solicitado", response_model=Profile)
+@router.put("/user/profile/",summary="Actualiza el perfil solicitado", response_model=Profile)
 async def update_profile(updated_profile:Profile,client_db = Depends(client.get_db),id: str = Path(..., description="El id del usuario")):     
     profiles = client.profiles
     query = profiles.update().where(profiles.columns.userid ==updated_profile.userid).values(

@@ -35,7 +35,7 @@ def test_view_inexistent_user_profile():
 
 """
 def test_create_user_profile():
-    response = client.post("/user/match/profile",
+    response = client.post("/user/profile",
 	json={
         "userid": "4321",	
         "username": "Angelina Jolie",
@@ -176,7 +176,7 @@ def test_update_filter():
     assert data["distance"] == 100
 
 def test_define_preference_with_more_likes_than_limit():
-    response = client.post("/user/4321/match/preference",
+    response = client.post("/user/match",
 	json={
   "userid_qualificator": "4321",
   "userid_qualificated": "3",
@@ -190,7 +190,7 @@ def test_define_preference_with_more_likes_than_limit():
     assert response == '{"detail":"Se alcanzo el limite de likes"}'
 
 def test_define_standard_user_preference_with_superlike():
-    response = client.post("/user/4321/match/preference",
+    response = client.post("/user/match",
 	json={
   "userid_qualificator": "4321",
   "userid_qualificated": "3",

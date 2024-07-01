@@ -1,7 +1,7 @@
 # match
 
 > __Versión actual__
-> * 0.0.11
+> * 0.0.12
 > 
 > __Funcionalidades actuales__
 > * Creación de nuevo perfil (retorna el perfil creado)

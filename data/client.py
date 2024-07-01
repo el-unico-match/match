@@ -31,6 +31,8 @@ profiles = Table(
     Column("last_like_date", DateTime),
     Column("like_counter", Integer),
     Column("superlike_counter", Integer)
+    Column("complete",Boolean),
+    Column("blocked",Boolean),
 )
 
 

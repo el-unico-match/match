@@ -539,7 +539,7 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 	
 
 @router.put("/user/{id}/match/profile/block",summary="Bloquea el perfil solicitado", response_model=Profile)
-async def block_profile(id: str = Path(..., description="El id del usuario")):     
+async def block_profile(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):     
     logger.info("bloquea el perfil en base de datos")
     profiles = client.profiles
     query = profiles.update().where(profiles.columns.userid == id).values(

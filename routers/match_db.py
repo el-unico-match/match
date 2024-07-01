@@ -559,6 +559,28 @@ async def block_profile(id: str = Path(..., description="El id del usuario"), cl
         print(e)
         logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
+    
+@router.put("/user/{id}/match/profile/unblock",summary="Desbloquea el perfil solicitado", response_model=Profile)
+async def unblock_profile(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):     
+    logger.info("desbloquea el perfil en base de datos")
+    profiles = client.profiles
+    query = profiles.update().where(profiles.columns.userid == id).values(
+        blocked = False
+    )
+    try: 	
+        await client_db.execute(query)		
+        
+        query_2="SELECT * FROM profiles WHERE profiles.userid = :id"
+        result = await client_db.fetch_one(query = query_2, values={"id": id})	
+
+        print(tuple(result.values()))    
+        profile=profile_schema(result) 
+        logger.info(profile)	
+        return profile		
+    except Exception as e:
+        print(e)
+        logger.error(e)
+        raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		
 
 @router.get("/user/{id}/match/profile/",summary="Obtiene el perfil solicitado", response_model=Profile)
 async def view_profile(id: str = Path(..., description="El id del usuario"), client_db = Depends(client.get_db)):     

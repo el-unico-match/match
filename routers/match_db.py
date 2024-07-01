@@ -248,7 +248,7 @@ async def profiles_filter(
                             m2.userid_qualificated = :id
                             and pf.userid = m2.userid_qualificator
                             and m2.qualification = :superlike
-        where pf.userid <> :id and m.id is null
+        where pf.userid <> :id and m.id is null and pf.complete and not pf.blocked
     '''
         
     if (gender != None):

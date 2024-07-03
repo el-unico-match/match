@@ -189,6 +189,14 @@ def test_view_filter():
     assert data["education"] == ""
     assert data["ethnicity"] == ""	
     assert data["distance"] == 100	
+
+def test_view_inexistent_user_profile_filter():
+    response = client.get("/user/1234/profiles/filter")
+    assert response.status_code == 404, response.text
+    response = response.text
+    print(response)
+    assert response == '{"detail":"No se han encontrado perfiles con ese id"}'
+
 	
 def test_define_preference_with_more_likes_than_limit():
     response = client.post("/user/100/match/preference",
@@ -232,10 +240,6 @@ def test_define_preference_with_more_superlikes_than_limit():
     print(response)
     assert response == '{"detail":"Se alcanzo el limite de superlikes"}'
 	
-#def test_get_inexistent_user_profile_filter():
-#    response = client.get("/user/1234/profiles/filter")
-#    assert response.status_code == 404, response.text
-
 def test_get_inexistent_user_next_candidate():
     response = client.get("/user/1234/match/nextcandidate")
     assert response.status_code == 404, response.text

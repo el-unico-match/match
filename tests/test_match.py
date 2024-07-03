@@ -176,6 +176,20 @@ def test_update_filter():
     assert data["ethnicity"] == ""	
     assert data["distance"] == 100
 
+def test_view_filter():
+    response = client.get("/user/100/match/filter")
+
+    #print(response) 
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["userid"] == "100"
+    assert data["gender"] == "Hombre"
+    assert data["age_from"] == 28
+    assert data["age_to"] == 48
+    assert data["education"] == ""
+    assert data["ethnicity"] == ""	
+    assert data["distance"] == 100	
+	
 def test_define_preference_with_more_likes_than_limit():
     response = client.post("/user/100/match/preference",
 	json={

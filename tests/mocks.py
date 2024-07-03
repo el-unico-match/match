@@ -5,9 +5,37 @@ from datetime import datetime
 class Mock:
 
     def __init__(self):
-        pass     
-		
+        self.standard_user_profile={  "userid": "100",
+                     "username": "Angelina Jolie",
+                     "gender": "Mujer",
+                     "looking_for": "Hombre",
+                     "age": 48,
+                     "education": "Estudios universitarios",
+                     "ethnicity": "",
+                     "is_match_plus": False,
+                     "latitud": 5.3432,
+                     "longitud": 7.846,
+                     "last_like_date":datetime.now(),
+                     "like_counter": 4,
+                     "superlike_counter": 0
+                  } 
+				  
+        self.premium_user_profile={  "userid": "200",
+                     "username": "Margot Robbie",
+                     "gender": "Mujer",
+                     "looking_for": "Hombre",
+                     "age": 33,
+                     "education": "Estudios secundarios",
+                     "ethnicity": "",
+                     "is_match_plus": True,
+                     "latitud": 6.5472,
+                     "longitud": 4.873,
+                     "last_like_date":datetime.now(),
+                     "like_counter": 4,
+                     "superlike_counter": 5
+                  } 		
     async def execute(self,query):
+	    #print(query)
 	    print("no hace nada")
 	    pass
 		
@@ -20,40 +48,31 @@ class Mock:
     def execute_profile_query(self,values):
         #print("valores:")
         #print(values)
-        #print(type(values))		
-        if(values['id']!="4321"):
-           raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 
+        #print(type(values))	
+        if(values['id']=="100"):
+           return self.standard_user_profile		
+        elif(values['id']=="200"):
+           return self.premium_user_profile				   
         else:
-           return {  "userid": "4321",
-  "username": "Angelina Jolie",
-  "gender": "Mujer",
-  "looking_for": "Hombre",
-  "age": 48,
-  "education": "Estudios universitarios",
-  "ethnicity": "",
-  "is_match_plus": False,
-  "latitud": 5.3432,
-  "longitud": 7.846,
-  "last_like_date":datetime.now(),#datetime.strptime('2024-06-05 23:24:11.564839','%Y-%m-%d %H:%M:%S.%f'),
-  "like_counter": 4,
-  "superlike_counter": 0
-        }
+           raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 
+
 
     def execute_filter_query(self,values):
         #print("valores:")
         #print(values)
         #print(type(values))		
-        if(values['id']!="4321"):
-           raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id") 
-        else:
-           return {  "userid": "4321",
+        if(values['id']=="100"):
+           return {  "userid": "100",
   "gender": "Hombre",
   "age_from": 28,
   "age_to":48,
   "education": "",
   "ethnicity": "",
   "distance": 100,
-        }
+        }		
+        else:
+           raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id") 
+
 		
     async def fetch_all(self,query,values):
         #sql_query = '''
@@ -81,11 +100,11 @@ class Mock:
         #print("valores:")
         #print(values)
         #print(type(values))	
-        if(values['id']=="4321"):
+        if(values['id']=="100"):
            #print("entra aca...")
            matchs=[]
            item={
-      "userid_1": "4321",
+      "userid_1": "100",
       "username_1": "Angelina Jolie",
       "qualification_1": "like",
       "qualification_date_1": "2024-06-05T23:24:11.580459",

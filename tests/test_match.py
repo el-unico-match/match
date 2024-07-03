@@ -37,7 +37,7 @@ def test_view_inexistent_user_profile():
 def test_create_user_profile():
     response = client.post("/user/match/profile",
 	json={
-        "userid": "4321",	
+        "userid": "100",	
         "username": "Angelina Jolie",
         "gender": "Mujer",
         "looking_for": "Hombre",
@@ -54,7 +54,7 @@ def test_create_user_profile():
     #print(response) 
     assert response.status_code == 200, response.text
     data = response.json()
-    assert data["userid"] == "4321"
+    assert data["userid"] == "100"
     assert data["username"] == "Angelina Jolie"
     assert data["gender"] == "Mujer"
     assert data["looking_for"] == "Hombre"
@@ -72,12 +72,12 @@ def test_create_user_profile():
 """
 
 def test_view_profile():
-    response = client.get("/user/4321/match/profile")
+    response = client.get("/user/100/match/profile")
 
     #print(response) 
     assert response.status_code == 200, response.text
     data = response.json()
-    assert data["userid"] == "4321"
+    assert data["userid"] == "100"
     assert data["username"] == "Angelina Jolie"
     assert data["gender"] == "Mujer"
     assert data["looking_for"] == "Hombre"
@@ -127,10 +127,10 @@ def test_update_inexistent_user_profile():
     assert response.status_code == 404, response.text
 
 def test_view_matchs():
-    response = client.get("/user/4321/matchs")
+    response = client.get("/user/100/matchs")
     assert response.status_code == 200, response.text
     data = response.json()[0] 
-    assert data["myself"]["userid"] == "4321"
+    assert data["myself"]["userid"] == "100"
     assert data["myself"]["username"] == "Angelina Jolie"
     assert data["myself"]["qualification"] == "like"
     assert data["myself"]["qualification_date"] == "2024-06-05T23:24:11.580459"
@@ -140,10 +140,10 @@ def test_view_matchs():
     assert data["matched"]["qualification_date"] == "2024-06-06T17:55:48.670889"
 
 def test_view_likes():
-    response = client.get("/user/4321/likes")
+    response = client.get("/user/100/likes")
     assert response.status_code == 200, response.text
     data = response.json()[0] 
-    assert data["myself"]["userid"] == "4321"
+    assert data["myself"]["userid"] == "100"
     assert data["myself"]["username"] == "Angelina Jolie"
     assert data["myself"]["qualification"] == "like"
     assert data["myself"]["qualification_date"] == "2024-06-05T23:24:11.580459"
@@ -153,9 +153,9 @@ def test_view_likes():
     assert data["matched"]["qualification_date"] == "2024-06-06T17:55:48.670889"
 
 def test_update_filter():
-    response = client.put("/user/4321/match/filter",
+    response = client.put("/user/100/match/filter",
 	json={
-  "userid": "4321",
+  "userid": "100",
   "gender": "Hombre",
   "age_from": 28,
   "age_to":48,
@@ -167,7 +167,7 @@ def test_update_filter():
     #print(response) 
     assert response.status_code == 200, response.text
     data = response.json()
-    assert data["userid"] == "4321"
+    assert data["userid"] == "100"
     assert data["gender"] == "Hombre"
     assert data["age_from"] == 28
     assert data["age_to"] == 48
@@ -176,9 +176,9 @@ def test_update_filter():
     assert data["distance"] == 100
 
 def test_define_preference_with_more_likes_than_limit():
-    response = client.post("/user/4321/match/preference",
+    response = client.post("/user/100/match/preference",
 	json={
-  "userid_qualificator": "4321",
+  "userid_qualificator": "100",
   "userid_qualificated": "3",
   "qualification": "like"
 })
@@ -190,9 +190,9 @@ def test_define_preference_with_more_likes_than_limit():
     assert response == '{"detail":"Se alcanzo el limite de likes"}'
 
 def test_define_standard_user_preference_with_superlike():
-    response = client.post("/user/4321/match/preference",
+    response = client.post("/user/100/match/preference",
 	json={
-  "userid_qualificator": "4321",
+  "userid_qualificator": "100",
   "userid_qualificated": "3",
   "qualification": "superlike"
 })
@@ -202,6 +202,20 @@ def test_define_standard_user_preference_with_superlike():
     response = response.text
     print(response)
     assert response == '{"detail":"Usuario normal no puede dar superlikes"}'
+
+def test_define_preference_with_more_superlikes_than_limit():
+    response = client.post("/user/200/match/preference",
+	json={
+  "userid_qualificator": "200",
+  "userid_qualificated": "3",
+  "qualification": "superlike"
+})
+
+    #print(response) 
+    assert response.status_code == 400, response.text
+    response = response.text
+    print(response)
+    assert response == '{"detail":"Se alcanzo el limite de superlikes"}'
 	
 #def test_get_inexistent_user_profile_filter():
 #    response = client.get("/user/1234/profiles/filter")

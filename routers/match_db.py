@@ -535,6 +535,7 @@ async def update_profile(updated_profile:Profile,client_db = Depends(client.get_
         return profile		
     except Exception as e:
         print(e)
+        print(type(e))		
         logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 	
 
@@ -616,6 +617,7 @@ async def view_profile(id: str = Path(..., description="El id del usuario"), cli
         logger.info(profile)	
         return profile
     except Exception as e:
+        print(type(e))
         print(e)
         logger.error(e)
         raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 		

@@ -30,7 +30,7 @@ def test_status():
 def test_view_inexistent_user_profile():
     response = client.get("/user/profile/1234")
     assert response.status_code == 404, response.text
-	
+
 """	
 
 """
@@ -126,6 +126,7 @@ def test_update_inexistent_user_profile():
     })
     assert response.status_code == 404, response.text
 
+	
 def test_view_matchs():
     response = client.get("/user/100/matchs")
     assert response.status_code == 200, response.text

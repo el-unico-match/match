@@ -54,7 +54,7 @@ class Mock:
         elif(values['id']=="200"):
            return self.premium_user_profile				   
         else:
-           raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 
+           raise Exception#raise HTTPException(status_code=404,detail="No se ha encontrado el perfil") 
 
 
     def execute_filter_query(self,values):
@@ -71,7 +71,7 @@ class Mock:
   "distance": 100,
         }		
         else:
-           raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id") 
+           raise Exception#raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id") 
 
 		
     async def fetch_all(self,query,values):

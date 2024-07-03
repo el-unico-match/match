@@ -10,6 +10,7 @@ from datetime import datetime
 import data.client as client
 import logging
 import math
+from main import streamHandler
 
 import firebase_admin
 from firebase_admin import credentials
@@ -26,7 +27,7 @@ logger=logging.getLogger(__name__)#settings.logger_name)
 #streamHandler.setLevel(settings.logging_level)
 #formatter = logging.Formatter('%(levelname)s %(asctime)s [%(filename)s] %(message)s')
 #streamHandler.setFormatter(formatter)
-#logger.addHandler(streamHandler)
+logger.addHandler(streamHandler)
 
 			
 def profile_schema(profile)-> dict:

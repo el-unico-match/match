@@ -22,11 +22,11 @@ if settings.mode=='production':
 
 #logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
 logger=logging.getLogger(__name__)#settings.logger_name)
-streamHandler = logging.StreamHandler()
-streamHandler.setLevel(settings.logging_level)
-formatter = logging.Formatter('%(levelname)s %(asctime)s [%(filename)s] %(message)s')
-streamHandler.setFormatter(formatter)
-logger.addHandler(streamHandler)
+#streamHandler = logging.StreamHandler()
+#streamHandler.setLevel(settings.logging_level)
+#formatter = logging.Formatter('%(levelname)s %(asctime)s [%(filename)s] %(message)s')
+#streamHandler.setFormatter(formatter)
+#logger.addHandler(streamHandler)
 
 			
 def profile_schema(profile)-> dict:

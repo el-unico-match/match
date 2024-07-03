@@ -1,6 +1,6 @@
 import logging
 from settings import settings
-logging.basicConfig(filename=settings.log_filename, level=settings.logging_level, format='%(asctime)s - %(levelname)s - %(message)s')
+#logging.basicConfig(filename=settings.log_filename, level=settings.logging_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
 from fastapi import FastAPI
 from routers import match_db
@@ -8,6 +8,12 @@ from data.apikey import enableApiKey
 from middlewares.ingoingSecurityCheck import IngoingSecurityCheck
 from middlewares.outgoingSecurityCheck import OutgoingSecurityCheck
 import asyncio
+
+streamHandler = logging.StreamHandler()
+streamHandler.setLevel(settings.logging_level)
+formatter = logging.Formatter('%(levelname)s %(asctime)s [%(filename)s] %(message)s')
+streamHandler.setFormatter(formatter)
+logger.addHandler(streamHandler)
 
 summary="Microservicio que se encarga de todo lo relativo a match"
 

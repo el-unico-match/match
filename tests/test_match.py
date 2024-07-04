@@ -108,6 +108,25 @@ def test_block_profile():
     assert data["longitud"] == 7.846
     assert data["like_counter"] == 4
     assert data["superlike_counter"] == 0
+
+def test_unblock_profile():
+    response = client.put("/user/100/match/profile/block")
+
+    #print(response) 
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["userid"] == "100"
+    assert data["username"] == "Angelina Jolie"
+    assert data["gender"] == "Mujer"
+    assert data["looking_for"] == "Hombre"
+    assert data["age"] == 48
+    assert data["education"] == "Estudios universitarios"
+    assert data["ethnicity"] == ""	
+    assert data["is_match_plus"] == False
+    assert data["latitud"] == 5.3432
+    assert data["longitud"] == 7.846
+    assert data["like_counter"] == 4
+    assert data["superlike_counter"] == 0
 	
 def test_update_inexistent_user_profile():
     response = client.put("/user/profile/1234",

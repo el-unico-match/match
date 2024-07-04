@@ -1,6 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
 
 # Entidad para definir los perfiles
 class Profile(BaseModel):

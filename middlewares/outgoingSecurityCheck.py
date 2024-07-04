@@ -1,11 +1,13 @@
 import logging
+from main import streamHandler
+logger=logging.getLogger(__name__)
+logger.addHandler(streamHandler)
+
 from settings import settings
 from common.swaggerRequestHelper import isRequestSentFromSwagger
 from fastapi import Request
 from fastapi.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-
-logger=logging.getLogger(__name__)
 
 class OutgoingSecurityCheck(BaseHTTPMiddleware):
 

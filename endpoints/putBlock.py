@@ -1,11 +1,11 @@
+import logging
+from main import streamHandler
+logger=logging.getLogger(__name__)
+logger.addHandler(streamHandler)
+
 from http.client import HTTPException
 from pydantic import BaseModel
 from endpoints.getSwipes import get_swipes_list
-from settings import settings
-import logging
-
-logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
-logger=logging.getLogger(__name__) 
 
 # Entidad para definir los perfiles
 class PutBlockRequest(BaseModel):

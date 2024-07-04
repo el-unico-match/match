@@ -1,11 +1,13 @@
+import logging
+from main import streamHandler
+logger=logging.getLogger(__name__)
+logger.addHandler(streamHandler)
+
 from settings import settings
 import httpx
 import jwt
-import logging
 
 async def enableApiKey():
-    logger=logging.getLogger(__name__)
-
     if (settings.apikey_value != '' and settings.apikey_activate_endpoint != ''):
 
         try:

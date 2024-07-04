@@ -23,5 +23,5 @@ async def enableApiKey():
             else:
                 logger.error(f"Error while enabling apiKey: {str(response.status_code): response.reason}")    
 
-        except Exception as error:
-            logger.error(f"Error while enabling apiKey: {str(error)}")
+        except Exception:
+            logger.error("Error while enabling apiKey", exc_info=True)

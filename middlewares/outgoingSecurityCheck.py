@@ -25,8 +25,8 @@ class OutgoingSecurityCheck(BaseHTTPMiddleware):
                 logger.error(error_message)
                 return Response(content=error_message, status_code=503)
      
-        except Exception as e500:
+        except Exception:
             errorMessage='Lo sentimos, algo falló'
-            logger.error(errorMessage, str(e500), exc_info=True)
+            logger.error(errorMessage, exc_info=True)
             return Response(content=errorMessage, status_code=500)
 

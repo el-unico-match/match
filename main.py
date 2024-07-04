@@ -1,10 +1,10 @@
-import logging
+#import logging
 from settings import settings
 #logging.basicConfig(filename=settings.log_filename, level=settings.logging_level, format='%(asctime)s - %(levelname)s - %(message)s')
-streamHandler = logging.StreamHandler()
-streamHandler.setLevel(settings.logging_level)
-formatter = logging.Formatter('%(levelname)s %(asctime)s [%(filename)s] %(message)s')
-streamHandler.setFormatter(formatter)
+#streamHandler = logging.StreamHandler()
+#streamHandler.setLevel(settings.logging_level)
+#formatter = logging.Formatter('%(levelname)s %(asctime)s [%(filename)s] %(message)s')
+#streamHandler.setFormatter(formatter)
 #logger.addHandler(streamHandler)
 
 from fastapi import FastAPI

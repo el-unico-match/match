@@ -8,9 +8,10 @@ from endpoints.putWhitelist import update_whitelist, PutWhiteList
 from settings import settings
 from datetime import datetime
 import data.client as client
-import logging
+#import logging
 import math
-from main import streamHandler
+#from main import streamHandler
+from common import utilities
 
 import firebase_admin
 from firebase_admin import credentials
@@ -21,14 +22,14 @@ if settings.mode=='production':
     firebase_cred = credentials.Certificate(server_key)
     firebase_app = firebase_admin.initialize_app(firebase_cred)
 
-#logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
-logger=logging.getLogger(__name__)#settings.logger_name)
-#streamHandler = logging.StreamHandler()
-#streamHandler.setLevel(settings.logging_level)
-#formatter = logging.Formatter('%(levelname)s %(asctime)s [%(filename)s] %(message)s')
-#streamHandler.setFormatter(formatter)
-logger.addHandler(streamHandler)
-
+##logging.basicConfig(format='%(asctime)s [%(filename)s] %(levelname)s %(message)s',filename=settings.log_filename,level=settings.logging_level)
+#logger=logging.getLogger(__name__)#settings.logger_name)
+##streamHandler = logging.StreamHandler()
+##streamHandler.setLevel(settings.logging_level)
+##formatter = logging.Formatter('%(levelname)s %(asctime)s [%(filename)s] %(message)s')
+##streamHandler.setFormatter(formatter)
+#logger.addHandler(streamHandler)
+logger=utilities.getLogger(__name__)
 			
 def profile_schema(profile)-> dict:
     schema= {

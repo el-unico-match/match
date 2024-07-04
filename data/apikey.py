@@ -1,7 +1,10 @@
-import logging
-from main import streamHandler
-logger=logging.getLogger(__name__)
-logger.addHandler(streamHandler)
+#import logging
+#from main import streamHandler
+#logger=logging.getLogger(__name__)
+#logger.addHandler(streamHandler)
+from common import utilities
+logger=utilities.getLogger(__name__)
+
 
 from settings import settings
 import httpx

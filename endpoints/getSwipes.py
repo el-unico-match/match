@@ -1,7 +1,9 @@
-import logging
-from main import streamHandler
-logger=logging.getLogger(__name__)
-logger.addHandler(streamHandler)
+#import logging
+#from main import streamHandler
+#logger=logging.getLogger(__name__)
+#logger.addHandler(streamHandler)
+from common import utilities
+logger=utilities.getLogger(__name__)
 
 from data.match import SwipesOut
 from typing import Union

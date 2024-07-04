@@ -278,6 +278,15 @@ def test_define_preference_with_more_superlikes_than_limit():
     response = response.text
     print(response)
     assert response == '{"detail":"Se alcanzo el limite de superlikes"}'
+
+def test_rewind_standard_user():
+    response = client.get("/user/100/rewind")
+
+    #print(response) 
+    assert response.status_code == 404, response.text
+    response = response.text
+    print(response)
+    assert response == '{"detail":"No se han encontrado perfiles con ese id que sea match plus"}'
 	
 def test_get_inexistent_user_next_candidate():
     response = client.get("/user/1234/match/nextcandidate")

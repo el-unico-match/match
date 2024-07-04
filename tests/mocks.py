@@ -44,6 +44,8 @@ class Mock:
            return self.execute_profile_query(values)
         if(query=="SELECT * FROM filters WHERE filters.userid = :id"):
            return self.execute_filter_query(values)	
+        if(query=="SELECT * FROM profiles WHERE profiles.userid = :id and is_match_plus"):
+           return self.execute_rewind_query(values)		
 		   
     def execute_profile_query(self,values):
         #print("valores:")
@@ -73,6 +75,12 @@ class Mock:
         #else:
         #   raise None#Exception#raise HTTPException(status_code=404,detail="No se han encontrado filtros con ese id") 
 
+    def execute_rewind_query(self,values):
+        #print("valores:")
+        #print(values)
+        #print(type(values))	
+        if(values['id']=="100"):
+           return None		
 		
     async def fetch_all(self,query,values):
         #sql_query = '''

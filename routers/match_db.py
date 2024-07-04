@@ -10,7 +10,6 @@ from datetime import datetime
 import data.client as client
 #import logging
 import math
-#from main import streamHandler
 from common import utilities
 
 import firebase_admin
@@ -441,7 +440,6 @@ async def define_preference(id:str,match:MatchIn,client_db = Depends(client.get_
 async def receive_like_or_superlike(calificated,calificator,client_db):
     query = "SELECT matchs.qualification FROM matchs WHERE matchs.userid_qualificator = :calificated AND matchs.userid_qualificated = :calificator"
     row = await client_db.fetch_one(query = query, values={"calificated": calificated,"calificator": calificator}) 
-	#TODO falta contemplar caso que la row no exista, en ese caso debe retornar false!!!
     if not row:
        #print("la otra persona todavía no dió like o dislike a tu perfil")
        return False
@@ -451,28 +449,6 @@ def send_match_notification(userid_qualificator,userid_qualificated):
     body = 'Hiciste match'
     send_push_notification(userid_qualificated,'Nuevo match', body,{'Match': userid_qualificator,'Tipo': "Match"})
     send_push_notification(userid_qualificator,'Nuevo match', body,{'Match': userid_qualificated,'Tipo': "Match"}) 	
-	
-#def regular_user_push_notification(originid,destinationid,title, body,data):	
-#    title = 'Nuevo like'
-#    body = 'Alguien te dio like'
-#
-#    data = {
-#    'Match': originid,
-#    'Tipo': "Like"
-#    }	
-#	
-#    send_push_notification(destinationid,title, body,data)	
-
-#def premium_user_push_notification(destinationid,title, body,data):	
-#    title = 'Nuevo like'
-#    body = 'Alguien te dio like'
-#
-#    data = {
-#    'Match': originid,
-#    'Tipo': "Like"
-#    }	
-#	
-#    send_push_notification(destinationid,title, body,data)	
 	
 @router.post("/user/match/profile",summary="Crea un nuevo perfil", response_model=Profile)
 async def create_profile(new_profile:Profile,client_db = Depends(client.get_db)): 

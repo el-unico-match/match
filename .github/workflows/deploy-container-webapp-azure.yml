@@ -1,4 +1,4 @@
-name: Build and deploy container to Azure Web App Container
+name: Deploys to USA Azure webapp container
 
 on:
   push:
